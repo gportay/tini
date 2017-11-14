@@ -37,6 +37,12 @@ on _console_, _tty2_, _tty3_ and _tty4_.
 **SIGINT**::
 	When this signal is received tini reboots.
 
+**SIGUSR1**::
+	When this signal is received tini re-executes itself.
+
+**SIGUSR2**::
+	When this signal is received tini halts.
+
 == BUGS
 
 Report bugs at *https://github.com/gazoo74/tini/issues*

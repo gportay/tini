@@ -491,6 +491,18 @@ int main(int argc, char * const argv[])
 		exit(EXIT_FAILURE);
 	}
 
+	sig = SIGUSR1;
+	if (sigaddset(&sigset, sig) == -1) {
+		perror("perror");
+		return EXIT_FAILURE;
+	}
+
+	sig = SIGUSR2;
+	if (sigaddset(&sigset, sig) == -1) {
+		perror("perror");
+		return EXIT_FAILURE;
+	}
+
 	sig = SIGCHLD;
 	if (sigaddset(&sigset, sig) == -1) {
 		perror("sigaddset");
@@ -540,7 +552,8 @@ int main(int argc, char * const argv[])
 		}
 
 		/* Exit */
-		if ((sig == SIGTERM) || (sig == SIGINT))
+		if ((sig == SIGTERM) || (sig == SIGINT) ||
+		    (sig == SIGUSR1) || (sig == SIGUSR2))
 			break;
 	}
 
@@ -552,6 +565,19 @@ int main(int argc, char * const argv[])
 
 	if (sigprocmask(SIG_UNBLOCK, &sigset, NULL) == -1)
 		perror("sigprocmask");
+
+	/* Re-execute itself */
+	if (sig == SIGUSR1) {
+		execv(argv[0], argv);
+		exit(EXIT_FAILURE);
+	}
+
+	/* Halt */
+	if (sig == SIGUSR2) {
+		if (reboot(RB_HALT_SYSTEM) == -1)
+			perror("reboot");
+		exit(EXIT_FAILURE);
+	}
 
 	/* Reboot (Ctrl-Alt-Delete) */
 	if (sig == SIGINT) {
