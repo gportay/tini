@@ -66,6 +66,7 @@ initramfs.cpio: ramfs/bin/busybox ramfs/dev/console
 
 include init.mk
 include tini.mk
+include tests.mk
 
 initramfs.cpio: ramfs/etc/passwd ramfs/etc/group | ramfs/root
 
