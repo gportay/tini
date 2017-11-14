@@ -1,0 +1,67 @@
+= tini(1)
+:doctype: manpage
+:author: Gaël PORTAY
+:email: gael.portay@savoirfairelinux.com
+:lang: en
+:man manual: tini Manual
+:man source: tini 0.1
+
+== NAME
+
+tini - simple init daemon
+
+== SYNOPSIS
+
+*tini* [OPTIONS]
+
+== DESCRIPTION
+
+*tini(1)* is a damn small process spawner and zombie reaper.
+
+It runs */etc/init.d/rcS* _init script_ and then spawns four _askfirst_ *sh(1)*
+on _console_, _tty2_, _tty3_ and _tty4_.
+
+== OPTIONS
+
+**-V or --version**::
+	Display the version.
+
+**-h or --help**::
+	Display this message.
+
+== SIGNALS
+
+**SIGTERM**::
+	When this signal is received tini powers off.
+
+**SIGINT**::
+	When this signal is received tini reboots.
+
+== BUGS
+
+Report bugs at *https://github.com/gazoo74/tini/issues*
+
+== AUTHOR
+
+Written by Gaël PORTAY *gael.portay@savoirfairelinux.com*
+
+== COPYRIGHT
+
+Copyright (C) 2017 Savoir-Faire Linux Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 2.1 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+== SEE ALSO
+
+*sh(1)*, *reboot(2)*

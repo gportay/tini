@@ -18,35 +18,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-.NOTPARALLEL:
-
 .PHONY: all
-all: override export CMDLINE+=rdinit=/sbin/tini
-all: runqemu
+all:
 
-.PHONY: runqemu
-runqemu:
-	$(MAKE) -C qemu $@
+initramfs.cpio: ramfs/sbin/tini
 
-.PHONY: nographic
-nographic: override export CMDLINE+=rdinit=/sbin/tini console=ttyS0
-nographic: override export QEMUFLAGS+=-nographic -serial mon:stdio
-nographic:
-	$(MAKE) -C qemu runqemu
+tini: override CFLAGS+=-Wall -Wextra -Werror
+tini: override LDFLAGS+=-static
 
-.PHONY: doc
-doc: tini.1.gz
-
-.PHONY: clean
-clean:
-	$(MAKE) -C qemu $@
-
-%.1: %.1.adoc
-	asciidoctor -b manpage -o $@ $<
-
-%.gz: %
-	gzip -c $^ >$@
-
-%:
-	$(MAKE) -C qemu $@
+ramfs/sbin/tini: tini | ramfs/sbin
+	install -D -m 755 $< $@
 
