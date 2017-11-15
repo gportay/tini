@@ -24,6 +24,10 @@
 all: override export CMDLINE+=rdinit=/sbin/tini
 all: runqemu
 
+.PHONY: debug
+debug: override export CMDLINE+=rdinit=/sbin/tini --debug
+debug: runqemu
+
 .PHONY: runqemu
 runqemu:
 	$(MAKE) -C qemu $@

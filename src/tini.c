@@ -45,6 +45,9 @@ const char VERSION[] = __DATE__ " " __TIME__;
 #include <asm/types.h>
 #include <linux/netlink.h>
 
+static int DEBUG = 0;
+#define debug(fmt, ...) if (DEBUG) fprintf(stderr, fmt, ##__VA_ARGS__)
+
 static char *rcS[] = { "/etc/init.d/rcS", "start", NULL };
 static char *sh[] = { "-sh", NULL };
 
@@ -90,6 +93,7 @@ void usage(FILE * f, char * const arg0)
 {
 	fprintf(f, "Usage: %s [OPTIONS]\n\n"
 		   "Options:\n"
+		   " -D or --debug          Turn on debug messages.\n"
 		   " -V or --version        Display the version.\n"
 		   " -h or --help           Display this message.\n"
 		   "", applet(arg0));
@@ -217,6 +221,7 @@ int spawn(const char *path, char * const argv[], const char *devname)
 int parse_arguments(struct options_t *opts, int argc, char * const argv[])
 {
 	static const struct option long_options[] = {
+		{ "debug",   no_argument,       NULL, 'D' },
 		{ "version", no_argument,       NULL, 'V' },
 		{ "help",    no_argument,       NULL, 'h' },
 		{ NULL,      no_argument,       NULL, 0   }
@@ -225,11 +230,15 @@ int parse_arguments(struct options_t *opts, int argc, char * const argv[])
 	opterr = 0;
 	for (;;) {
 		int index;
-		int c = getopt_long(argc, argv, "Vh", long_options, &index);
+		int c = getopt_long(argc, argv, "DVh", long_options, &index);
 		if (c == -1)
 			break;
 
 		switch (c) {
+		case 'D':
+			DEBUG++;
+			break;
+
 		case 'V':
 			printf("%s\n", VERSION);
 			exit(EXIT_SUCCESS);
@@ -268,10 +277,13 @@ int uevent_variable(char *variable, char *value, void *data)
 
 	/* Spawn askfirst shell on tty2, tty3, tty4... */
 	if (!__strncmp(value, "tty")) {
-		if ((value[3] >= '2') && (value[3] <= '4') && (!value[4]))
+		if ((value[3] >= '2') && (value[3] <= '4') && (!value[4])) {
+			debug("Spawning /bin/sh (%s)\n", value);
 			spawn("/bin/sh", sh, value);
+		}
 	/* ... and on console */
 	} else if (!strcmp(value, "console")) {
+		debug("Spawning /bin/sh (%s)\n", value);
 		spawn("/bin/sh", sh, value);
 	}
 
@@ -538,6 +550,8 @@ int main(int argc, char * const argv[])
 			perror("sigwaitinfo");
 			break;
 		}
+
+		debug("sigwaitinfo(): %s\n", strsignal(sig));
 
 		/* Reap zombies */
 		if (sig == SIGCHLD) {
