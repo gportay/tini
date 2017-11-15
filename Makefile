@@ -24,6 +24,10 @@
 all: override export CMDLINE+=rdinit=/sbin/tini
 all: runqemu
 
+.PHONY: verbose
+verbose: override export CMDLINE+=rdinit=/sbin/tini --verbose
+verbose: runqemu
+
 .PHONY: debug
 debug: override export CMDLINE+=rdinit=/sbin/tini --debug
 debug: runqemu

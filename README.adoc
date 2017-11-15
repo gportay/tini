@@ -23,6 +23,9 @@ on _console_, _tty2_, _tty3_ and _tty4_.
 
 == OPTIONS
 
+**-v or --verbose**::
+	Turn on verbose messages
+
 **-D or --debug**::
 	Turn on debug messages.
 

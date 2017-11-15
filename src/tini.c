@@ -45,7 +45,9 @@ const char VERSION[] = __DATE__ " " __TIME__;
 #include <asm/types.h>
 #include <linux/netlink.h>
 
+static int VERBOSE = 0;
 static int DEBUG = 0;
+#define verbose(fmt, ...) if (VERBOSE) fprintf(stderr, fmt, ##__VA_ARGS__)
 #define debug(fmt, ...) if (DEBUG) fprintf(stderr, fmt, ##__VA_ARGS__)
 
 static char *rcS[] = { "/etc/init.d/rcS", "start", NULL };
@@ -93,6 +95,7 @@ void usage(FILE * f, char * const arg0)
 {
 	fprintf(f, "Usage: %s [OPTIONS]\n\n"
 		   "Options:\n"
+		   " -v or --verbose        Turn on verbose messages.\n"
 		   " -D or --debug          Turn on debug messages.\n"
 		   " -V or --version        Display the version.\n"
 		   " -h or --help           Display this message.\n"
@@ -221,6 +224,7 @@ int spawn(const char *path, char * const argv[], const char *devname)
 int parse_arguments(struct options_t *opts, int argc, char * const argv[])
 {
 	static const struct option long_options[] = {
+		{ "verbose", no_argument,       NULL, 'v' },
 		{ "debug",   no_argument,       NULL, 'D' },
 		{ "version", no_argument,       NULL, 'V' },
 		{ "help",    no_argument,       NULL, 'h' },
@@ -230,11 +234,15 @@ int parse_arguments(struct options_t *opts, int argc, char * const argv[])
 	opterr = 0;
 	for (;;) {
 		int index;
-		int c = getopt_long(argc, argv, "DVh", long_options, &index);
+		int c = getopt_long(argc, argv, "vDVh", long_options, &index);
 		if (c == -1)
 			break;
 
 		switch (c) {
+		case 'v':
+			VERBOSE++;
+			break;
+
 		case 'D':
 			DEBUG++;
 			break;
@@ -555,6 +563,9 @@ int main(int argc, char * const argv[])
 
 		/* Reap zombies */
 		if (sig == SIGCHLD) {
+			verbose("pid %i exited with status %i\n",
+				siginfo.si_pid, siginfo.si_status);
+
 			while (waitpid(-1, NULL, WNOHANG) > 0);
 			continue;
 		}
