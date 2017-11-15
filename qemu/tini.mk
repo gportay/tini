@@ -18,9 +18,25 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+# Automount devtmpfs at /dev, after the kernel mounted the rootfs
+LINUX_CONFIGS	+= CONFIG_DEVTMPFS=y
+LINUX_CONFIGS	+= CONFIG_DEVTMPFS_MOUNT=y
+
+# Unix domain sockets
+LINUX_CONFIGS	+= CONFIG_NET=y
+LINUX_CONFIGS	+= CONFIG_WIRELESS=n
+LINUX_CONFIGS	+= CONFIG_UNIX=y
+
+# sysfs file system support
+LINUX_CONFIGS	+= CONFIG_SYSFS=y
+
 .PHONY: all
 all:
 
+ramfs/sys:
+	mkdir -p $@
+
+initramfs.cpio: ramfs/sys
 initramfs.cpio: ramfs/sbin/tini
 
 tini: override CFLAGS+=-Wall -Wextra -Werror

@@ -23,6 +23,7 @@ PATH=/usr/bin:/usr/sbin:/bin:sbin
 export PATH
 
 mount -t proc proc /proc
+mount -t sysfs sysfs /sys
 
 if ! grep -q '^devtmpfs ' /proc/mounts && \
    ! mount -t devtmpfs devtmps /dev; then
@@ -38,3 +39,9 @@ EOF
 	mknod -m 400 /dev/tty5 c 4 5
 	mknod -m 400 /dev/tty6 c 4 6
 fi
+
+# Coldplug
+find /sys/devices/ -name uevent | \
+while read uevent; do
+	echo add >"$uevent"
+done
