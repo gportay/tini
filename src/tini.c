@@ -96,7 +96,7 @@ void usage(FILE * f, char * const arg0)
 {
 	const char *name = applet(arg0);
 	fprintf(f, "Usage: %s [OPTIONS]\n"
-		   "       %s halt|poweroff|reboot\n"
+		   "       %s halt|poweroff|reboot|re-exec\n"
 		   "       %s spawn COMMAND [ARGUMENT...]\n\n"
 		   "Options:\n"
 		   "       --re-exec        Re-execute.\n"
@@ -527,6 +527,8 @@ int main_applet(int argc, char * const argv[])
 		return main_kill(SIGTERM);
 	else if (!strcmp(app, "halt"))
 		return main_kill(SIGUSR2);
+	else if (!strcmp(app, "re-exec"))
+		return main_kill(SIGUSR1);
 	else if (!strcmp(app, "spawn"))
 		return main_spawn(argc, &argv[0]);
 

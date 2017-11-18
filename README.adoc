@@ -14,7 +14,7 @@ tini - simple init daemon
 
 *tini* [OPTIONS]
 
-*tini* halt|poweroff|reboot
+*tini* halt|poweroff|reboot|re-exec
 
 == DESCRIPTION
 
