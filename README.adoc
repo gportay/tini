@@ -14,6 +14,8 @@ tini - simple init daemon
 
 *tini* [OPTIONS]
 
+*tini* halt|poweroff|reboot
+
 == DESCRIPTION
 
 *tini(1)* is a damn small process spawner and zombie reaper.

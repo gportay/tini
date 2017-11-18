@@ -93,13 +93,15 @@ static inline const char *applet(const char *arg0)
 
 void usage(FILE * f, char * const arg0)
 {
-	fprintf(f, "Usage: %s [OPTIONS]\n\n"
+	const char *name = applet(arg0);
+	fprintf(f, "Usage: %s [OPTIONS]\n"
+		   "       %s halt|poweroff|reboot\n\n"
 		   "Options:\n"
 		   " -v or --verbose        Turn on verbose messages.\n"
 		   " -D or --debug          Turn on debug messages.\n"
 		   " -V or --version        Display the version.\n"
 		   " -h or --help           Display this message.\n"
-		   "", applet(arg0));
+		   "", name, name);
 }
 
 int run(const char *path, char * const argv[], const char *devname)
@@ -476,7 +478,40 @@ ssize_t netlink_recv(int fd, struct sockaddr_nl *addr)
 	return len;
 }
 
-int main(int argc, char * const argv[])
+int kill_pid1(int signum)
+{
+	if (kill(1, signum) == -1) {
+		perror("kill");
+		return -1;
+	}
+
+	return 0;
+}
+
+int main_kill(int signum)
+{
+	if (kill_pid1(signum) == -1)
+		return EXIT_FAILURE;
+
+	return EXIT_SUCCESS;
+}
+
+int main_applet(int argc, char * const argv[])
+{
+	const char *app = applet(argv[0]);
+
+	(void)argc;
+	if (!strcmp(app, "reboot"))
+		return main_kill(SIGINT);
+	else if (!strcmp(app, "poweroff"))
+		return main_kill(SIGTERM);
+	else if (!strcmp(app, "halt"))
+		return main_kill(SIGUSR2);
+
+	return EXIT_FAILURE;
+}
+
+int main_tini(int argc, char * const argv[])
 {
 	static struct options_t options;
 	struct sockaddr_nl addr;
@@ -488,9 +523,16 @@ int main(int argc, char * const argv[])
 		fprintf(stderr, "Error: %s: Invalid argument!\n",
 				argv[optind-1]);
 		exit(EXIT_FAILURE);
-	} else if (argc - argi >= 1) {
+	} else if (argc - argi > 1) {
 		usage(stdout, argv[0]);
 		fprintf(stderr, "Error: Too many arguments!\n");
+		exit(EXIT_FAILURE);
+	} else if (argc - argi == 1) {
+		if (main_applet(1, &argv[argi]) == 0)
+			exit(EXIT_SUCCESS);
+
+		usage(stdout, argv[0]);
+		fprintf(stderr, "Error: %s: Invalid applet!\n", argv[argi]);
 		exit(EXIT_FAILURE);
 	}
 
@@ -620,4 +662,14 @@ int main(int argc, char * const argv[])
 		perror("reboot");
 
 	exit(EXIT_FAILURE);
+}
+
+int main(int argc, char * const argv[])
+{
+	const char *app = applet(argv[0]);
+
+	if (!strcmp(app, "tini"))
+		return main_tini(argc, argv);
+
+	return main_applet(argc, argv);
 }
