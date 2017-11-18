@@ -33,10 +33,10 @@ LINUX_CONFIGS	+= CONFIG_SYSFS=y
 .PHONY: all
 all:
 
-ramfs/sys:
+ramfs/sys ramfs/run:
 	mkdir -p $@
 
-initramfs.cpio: ramfs/sys
+initramfs.cpio: ramfs/sys ramfs/run
 initramfs.cpio: ramfs/sbin/tini
 initramfs.cpio: ramfs/sbin/halt ramfs/sbin/poweroff ramfs/sbin/reboot
 initramfs.cpio: ramfs/sbin/spawn ramfs/sbin/zombize ramfs/sbin/re-exec
