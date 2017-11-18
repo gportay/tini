@@ -25,6 +25,9 @@ on _console_, _tty2_, _tty3_ and _tty4_.
 
 == OPTIONS
 
+**--re-exec**::
+	Re-execute.
+
 **-v or --verbose**::
 	Turn on verbose messages
 

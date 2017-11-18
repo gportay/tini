@@ -80,6 +80,7 @@ int uevent_parse_line(char *line,
 struct options_t {
 	int argc;
 	char * const *argv;
+	int re_exec;
 };
 
 static inline const char *applet(const char *arg0)
@@ -97,6 +98,7 @@ void usage(FILE * f, char * const arg0)
 	fprintf(f, "Usage: %s [OPTIONS]\n"
 		   "       %s halt|poweroff|reboot\n\n"
 		   "Options:\n"
+		   "       --re-exec        Re-execute.\n"
 		   " -v or --verbose        Turn on verbose messages.\n"
 		   " -D or --debug          Turn on debug messages.\n"
 		   " -V or --version        Display the version.\n"
@@ -226,6 +228,7 @@ int spawn(const char *path, char * const argv[], const char *devname)
 int parse_arguments(struct options_t *opts, int argc, char * const argv[])
 {
 	static const struct option long_options[] = {
+		{ "re-exec", no_argument,       NULL, 1   },
 		{ "verbose", no_argument,       NULL, 'v' },
 		{ "debug",   no_argument,       NULL, 'D' },
 		{ "version", no_argument,       NULL, 'V' },
@@ -241,6 +244,10 @@ int parse_arguments(struct options_t *opts, int argc, char * const argv[])
 			break;
 
 		switch (c) {
+		case 1:
+			opts->re_exec = 1;
+			break;
+
 		case 'v':
 			VERBOSE++;
 			break;
@@ -533,6 +540,20 @@ int main_tini(int argc, char * const argv[])
 
 		usage(stdout, argv[0]);
 		fprintf(stderr, "Error: %s: Invalid applet!\n", argv[argi]);
+		exit(EXIT_FAILURE);
+	}
+
+	/* Re-execute pid 1 when not pid 1 */
+	if (getpid() > 1 && options.re_exec) {
+		if (kill_pid1(SIGUSR1) == -1)
+			exit(EXIT_FAILURE);
+
+		return EXIT_SUCCESS;
+	}
+
+	/* Not supposed to be run when not pid 1 */
+	if (getpid() > 1) {
+		fprintf(stderr, "Error: Not pid 1!\n");
 		exit(EXIT_FAILURE);
 	}
 
