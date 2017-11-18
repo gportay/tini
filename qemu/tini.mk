@@ -39,6 +39,7 @@ ramfs/sys:
 initramfs.cpio: ramfs/sys
 initramfs.cpio: ramfs/sbin/tini
 initramfs.cpio: ramfs/sbin/halt ramfs/sbin/poweroff ramfs/sbin/reboot
+initramfs.cpio: ramfs/sbin/spawn
 
 tini: override CFLAGS+=-Wall -Wextra -Werror
 tini: override LDFLAGS+=-static
@@ -47,5 +48,8 @@ ramfs/sbin/tini: tini | ramfs/sbin
 	install -D -m 755 $< $@
 
 ramfs/sbin/halt ramfs/sbin/poweroff ramfs/sbin/reboot: ramfs/sbin/tini | ramfs/sbin
+	ln -sf $(<F) $@
+
+ramfs/sbin/spawn: ramfs/sbin/tini | ramfs/sbin
 	ln -sf $(<F) $@
 

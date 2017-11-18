@@ -96,14 +96,15 @@ void usage(FILE * f, char * const arg0)
 {
 	const char *name = applet(arg0);
 	fprintf(f, "Usage: %s [OPTIONS]\n"
-		   "       %s halt|poweroff|reboot\n\n"
+		   "       %s halt|poweroff|reboot\n"
+		   "       %s spawn COMMAND [ARGUMENT...]\n\n"
 		   "Options:\n"
 		   "       --re-exec        Re-execute.\n"
 		   " -v or --verbose        Turn on verbose messages.\n"
 		   " -D or --debug          Turn on debug messages.\n"
 		   " -V or --version        Display the version.\n"
 		   " -h or --help           Display this message.\n"
-		   "", name, name);
+		   "", name, name, name);
 }
 
 int run(const char *path, char * const argv[], const char *devname)
@@ -503,6 +504,18 @@ int main_kill(int signum)
 	return EXIT_SUCCESS;
 }
 
+int main_spawn(int argc, char * const argv[])
+{
+	char **arg = (char **)argv;
+	int i;
+
+	for (i = 0; i < (argc - 1); i++)
+		arg[i] = arg[i+1];
+	arg[i] = NULL;
+
+	return spawn(argv[0], argv, NULL);
+}
+
 int main_applet(int argc, char * const argv[])
 {
 	const char *app = applet(argv[0]);
@@ -514,6 +527,8 @@ int main_applet(int argc, char * const argv[])
 		return main_kill(SIGTERM);
 	else if (!strcmp(app, "halt"))
 		return main_kill(SIGUSR2);
+	else if (!strcmp(app, "spawn"))
+		return main_spawn(argc, &argv[0]);
 
 	return EXIT_FAILURE;
 }
