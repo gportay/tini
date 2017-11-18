@@ -97,7 +97,7 @@ void usage(FILE * f, char * const arg0)
 	const char *name = applet(arg0);
 	fprintf(f, "Usage: %s [OPTIONS]\n"
 		   "       %s halt|poweroff|reboot|re-exec\n"
-		   "       %s spawn COMMAND [ARGUMENT...]\n\n"
+		   "       %s spawn|zombize COMMAND [ARGUMENT...]\n\n"
 		   "Options:\n"
 		   "       --re-exec        Re-execute.\n"
 		   " -v or --verbose        Turn on verbose messages.\n"
@@ -105,6 +105,48 @@ void usage(FILE * f, char * const arg0)
 		   " -V or --version        Display the version.\n"
 		   " -h or --help           Display this message.\n"
 		   "", name, name, name);
+}
+
+int zombize(const char *path, char * const argv[], const char *devname)
+{
+	pid_t pid = fork();
+	if (pid == -1) {
+		perror("fork");
+		return -1;
+	}
+
+	/* Parent */
+	if (pid)
+		return 0;
+
+	netlink_close(nl_fd);
+
+	/* Child */
+	if (devname) {
+		int fd;
+
+		if (chdir("/dev") == -1)
+			perror("chdir");
+
+		close(STDIN_FILENO);
+		fd = open(devname, O_RDONLY|O_NOCTTY);
+		if (fd == -1)
+			perror("open");
+
+		close(STDOUT_FILENO);
+		fd = open(devname, O_WRONLY|O_NOCTTY);
+		if (fd == -1)
+			perror("open");
+
+		close(STDERR_FILENO);
+		dup2(STDOUT_FILENO, STDERR_FILENO);
+
+		if (chdir("/") == -1)
+			perror("chdir");
+	}
+
+	execv(path, argv);
+	_exit(127);
 }
 
 int run(const char *path, char * const argv[], const char *devname)
@@ -516,6 +558,18 @@ int main_spawn(int argc, char * const argv[])
 	return spawn(argv[0], argv, NULL);
 }
 
+int main_zombize(int argc, char * const argv[])
+{
+	char **arg = (char **)argv;
+	int i;
+
+	for (i = 0; i < (argc - 1); i++)
+		arg[i] = arg[i+1];
+	arg[i] = NULL;
+
+	return zombize(argv[0], argv, NULL);
+}
+
 int main_applet(int argc, char * const argv[])
 {
 	const char *app = applet(argv[0]);
@@ -531,6 +585,8 @@ int main_applet(int argc, char * const argv[])
 		return main_kill(SIGUSR1);
 	else if (!strcmp(app, "spawn"))
 		return main_spawn(argc, &argv[0]);
+	else if (!strcmp(app, "zombize"))
+		return main_zombize(argc, &argv[0]);
 
 	return EXIT_FAILURE;
 }
