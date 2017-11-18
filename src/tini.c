@@ -38,6 +38,7 @@ const char VERSION[] = __DATE__ " " __TIME__;
 #include <sys/stat.h>
 #include <sys/reboot.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <assert.h>
 
 #include <sys/socket.h>
@@ -263,6 +264,75 @@ int spawn(const char *path, char * const argv[], const char *devname)
 		if (chdir("/") == -1)
 			perror("chdir");
 	}
+
+	execv(path, argv);
+	_exit(127);
+}
+
+int respawn(const char *path, char * const argv[], const char *devname)
+{
+	char pidfile[PATH_MAX];
+	FILE *f;
+
+	pid_t pid = fork();
+	if (pid == -1) {
+		perror("fork");
+		return -1;
+	}
+
+	/* Parent */
+	if (pid) {
+		int status;
+
+		if (waitpid(pid, &status, 0) == -1) {
+			perror("waitpid");
+			return -1;
+		}
+
+		if (WIFEXITED(status))
+			status = WEXITSTATUS(status);
+		else if (WIFSIGNALED(status))
+			fprintf(stderr, "%s\n", strsignal(WTERMSIG(status)));
+
+		return status;
+	}
+
+	netlink_close(nl_fd);
+
+	/* Child */
+	pid = fork();
+	if (pid == -1) {
+		perror("fork");
+		exit(EXIT_FAILURE);
+	} else if (pid) {
+		exit(EXIT_SUCCESS);
+	}
+
+	snprintf(pidfile, sizeof(pidfile), "/run/tini/%i.pid", getpid());
+	f = fopen(pidfile, "w");
+	if (f) {
+		char * const *arg = &argv[1];
+
+		fprintf(f, "EXEC=%s", path);
+		while (*arg)
+			fprintf(f, " %s", *arg++);
+		fprintf(f, "\n");
+
+		fclose(f);
+		f = NULL;
+	}
+
+	/* Daemon */
+	close(STDIN_FILENO);
+	if (open(devname, O_RDONLY|O_NOCTTY) == -1)
+		perror("open");
+
+	close(STDOUT_FILENO);
+	if (open(devname, O_WRONLY|O_NOCTTY) == -1)
+		perror("open");
+
+	close(STDERR_FILENO);
+	dup2(STDOUT_FILENO, STDERR_FILENO);
 
 	execv(path, argv);
 	_exit(127);
@@ -558,6 +628,18 @@ int main_spawn(int argc, char * const argv[])
 	return spawn(argv[0], argv, NULL);
 }
 
+int main_respawn(int argc, char * const argv[])
+{
+	char **arg = (char **)argv;
+	int i;
+
+	for (i = 0; i < (argc - 1); i++)
+		arg[i] = arg[i+1];
+	arg[i] = NULL;
+
+	return respawn(argv[0], argv, "/dev/null");
+}
+
 int main_zombize(int argc, char * const argv[])
 {
 	char **arg = (char **)argv;
@@ -585,6 +667,8 @@ int main_applet(int argc, char * const argv[])
 		return main_kill(SIGUSR1);
 	else if (!strcmp(app, "spawn"))
 		return main_spawn(argc, &argv[0]);
+	else if (!strcmp(app, "respawn"))
+		return main_respawn(argc, &argv[0]);
 	else if (!strcmp(app, "zombize"))
 		return main_zombize(argc, &argv[0]);
 
