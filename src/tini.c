@@ -272,6 +272,23 @@ int spawn(const char *path, char * const argv[], const char *devname)
 	_exit(127);
 }
 
+int system_respawn(const char *cmdline, pid_t oldpid)
+{
+	char buf[PATH_MAX];
+	int status;
+
+	snprintf(buf, sizeof(buf), "respawn %s", cmdline);
+	status = system(buf);
+	if (WIFEXITED(status)) {
+		verbose("pid %i respawned\n", oldpid);
+		status = WEXITSTATUS(status);
+	} else if (WIFSIGNALED(status)) {
+		fprintf(stderr, "%s\n", strsignal(WTERMSIG(status)));
+	}
+
+	return status;
+}
+
 int respawn(const char *path, char * const argv[], const char *devname)
 {
 	char pidfile[PATH_MAX];
@@ -681,6 +698,33 @@ int pidfile_parse(const char *pidfile, variable_cb_t *callback, void *data)
 		perror("close");
 
 	return ret;
+}
+
+int pidfile_respawn(char *variable, char *value, void *data)
+{
+	pid_t *pid = (pid_t *)data;
+
+	if (!strcmp(variable, "EXEC"))
+		system_respawn(value, *pid);
+
+	return 0;
+}
+
+int pid_respawn(pid_t pid)
+{
+	char pidfile[PATH_MAX];
+	struct stat statbuf;
+
+	snprintf(pidfile, sizeof(pidfile), "/run/tini/%i.pid", pid);
+	if (stat(pidfile, &statbuf))
+		return 1;
+
+	pidfile_parse(pidfile, pidfile_respawn, &pid);
+
+	if (unlink(pidfile) == -1)
+		perror("unlink");
+
+	return 0;
 }
 
 int kill_pid1(int signum)
