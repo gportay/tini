@@ -78,6 +78,9 @@ int uevent_parse_line(char *line,
 		      uevent_variable_cb_t *var_cb,
 		      void *data);
 
+typedef int variable_cb_t(char *, char *, void *);
+int variable_parse_line(char *line, variable_cb_t *callback, void *data);
+
 struct options_t {
 	int argc;
 	char * const *argv;
@@ -596,6 +599,88 @@ ssize_t netlink_recv(int fd, struct sockaddr_nl *addr)
 	}
 
 	return len;
+}
+
+int variable_parse_line(char *line, variable_cb_t *callback, void *data)
+{
+	char *equal;
+
+	/* empty line? */
+	if (*line == '\0')
+		return 0;
+
+	/* variable? */
+	equal = strchr(line, '=');
+	if (equal) {
+		char *variable, *value;
+
+		variable = line;
+		value = equal + 1;
+		*equal = '\0';
+
+		if (!callback)
+			return 0;
+
+		return callback(variable, value, data);
+	}
+
+	fprintf(stderr, "malformated variable: \"%s\"."
+			" Must be variable=value!\n", line);
+	return 1;
+}
+
+ssize_t variable_read(int fd, variable_cb_t cb, void *data)
+{
+	char buf[BUFSIZ];
+	ssize_t len = 0;
+
+	for (;;) {
+		char *n, *s;
+		ssize_t l;
+
+		l = read(fd, buf, sizeof(buf));
+		if (l == -1)
+			perror("read");
+		else if (!l)
+			break;
+
+		buf[l] = 0;
+		s = buf;
+
+		for (;;) {
+			n = strchr(s, '\n');
+			if (!n || n == s)
+				break;
+
+			*n = 0;
+			if (variable_parse_line(s, cb, data))
+				break;
+
+			s = n + 1;
+		}
+
+		len += l;
+	}
+
+	return len;
+}
+
+int pidfile_parse(const char *pidfile, variable_cb_t *callback, void *data)
+{
+	int fd, ret;
+
+	fd = open(pidfile, O_RDONLY);
+	if (fd == -1) {
+		perror("open");
+		return -1;
+	}
+
+	ret = variable_read(fd, callback, data);
+
+	if (close(fd) == -1)
+		perror("close");
+
+	return ret;
 }
 
 int kill_pid1(int signum)
