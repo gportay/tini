@@ -919,6 +919,7 @@ int main_tini(int argc, char * const argv[])
 			verbose("pid %i exited with status %i\n",
 				siginfo.si_pid, siginfo.si_status);
 
+			pid_respawn(siginfo.si_pid);
 			while (waitpid(-1, NULL, WNOHANG) > 0);
 			continue;
 		}
