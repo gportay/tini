@@ -39,6 +39,7 @@ const char VERSION[] = __DATE__ " " __TIME__;
 #include <sys/reboot.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <dirent.h>
 #include <assert.h>
 
 #include <sys/socket.h>
@@ -738,6 +739,50 @@ char *strargv(char *buf, size_t bufsize, char * const argv[])
 		size += snprintf(&buf[size], size - bufsize, " %s", *arg++);
 
 	return buf;
+}
+
+int pidfile_execline(char *variable, char *value, void *data)
+{
+	return !strcmp(variable, "EXEC") &&
+	       !strcmp(value, (const char *)data);
+}
+
+int rundir_parse(const char *path, variable_cb_t *callback, void *data)
+{
+	struct dirent **namelist;
+	int n, ret = 0;
+
+	n = scandir(path, &namelist, NULL, alphasort);
+	if (n == -1) {
+		perror("scandir");
+		return -1;
+	}
+
+	while (n--) {
+		if (strcmp(namelist[n]->d_name, ".") &&
+		    strcmp(namelist[n]->d_name, "..")) {
+			char pidfile[BUFSIZ];
+			pid_t pid;
+
+			snprintf(pidfile, sizeof(pidfile), "%s/%s", path,
+				 namelist[n]->d_name);
+
+			if (pidfile_parse(pidfile, callback, data)) {
+				if (unlink(pidfile) == -1)
+					perror("unlink");
+
+				pid = strtol(namelist[n]->d_name, NULL, 0);
+				if (kill(pid, SIGKILL) == -1)
+					perror("kill");
+
+				verbose("pid %i assassinated\n", pid);
+			}
+		}
+		free(namelist[n]);
+	}
+	free(namelist);
+
+	return ret;
 }
 
 int kill_pid1(int signum)
