@@ -827,6 +827,21 @@ int main_respawn(int argc, char * const argv[])
 	return respawn(argv[0], argv, "/dev/null");
 }
 
+int main_assassinate(int argc, char * const argv[])
+{
+	char **arg = (char **)argv;
+	char execline[BUFSIZ];
+	int i;
+
+	for (i = 0; i < (argc - 1); i++)
+		arg[i] = arg[i+1];
+	arg[i] = NULL;
+
+	strargv(execline, sizeof(execline), arg);
+
+	return rundir_parse("/run/tini", pidfile_execline, execline);
+}
+
 int main_zombize(int argc, char * const argv[])
 {
 	char **arg = (char **)argv;
@@ -856,6 +871,8 @@ int main_applet(int argc, char * const argv[])
 		return main_spawn(argc, &argv[0]);
 	else if (!strcmp(app, "respawn"))
 		return main_respawn(argc, &argv[0]);
+	else if (!strcmp(app, "assassinate"))
+		return main_assassinate(argc, &argv[0]);
 	else if (!strcmp(app, "zombize"))
 		return main_zombize(argc, &argv[0]);
 
