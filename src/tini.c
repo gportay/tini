@@ -728,6 +728,18 @@ int pid_respawn(pid_t pid)
 	return ret;
 }
 
+char *strargv(char *buf, size_t bufsize, char * const argv[])
+{
+	char * const *arg = argv;
+	ssize_t size = 0;
+
+	size = snprintf(&buf[size], size - bufsize, "%s", *arg++);
+	while (*arg)
+		size += snprintf(&buf[size], size - bufsize, " %s", *arg++);
+
+	return buf;
+}
+
 int kill_pid1(int signum)
 {
 	if (kill(1, signum) == -1) {
