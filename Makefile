@@ -21,7 +21,7 @@
 .NOTPARALLEL:
 
 .PHONY: all
-all: override export CMDLINE+=rdinit=/sbin/tini
+all: override export CMDLINE+=rdinit=/sbin/tini vga=0x301
 all: runqemu
 
 .PHONY: verbose
@@ -41,6 +41,17 @@ nographic: override export CMDLINE+=rdinit=/sbin/tini console=ttyS0
 nographic: override export QEMUFLAGS+=-nographic -serial mon:stdio
 nographic:
 	$(MAKE) -C qemu runqemu
+
+.PHONY: bootup-logo
+bootup-logo: S=$(CURDIR)/qemu/linux
+bootup-logo: 
+	$(MAKE) -C qemu -f $@.mk
+
+.PHONY: menuconfig
+menuconfig: qemu_linux_menuconfig
+
+qemu_%:
+	$(MAKE) -C qemu $*
 
 .PHONY: doc
 doc: tini.1.gz
