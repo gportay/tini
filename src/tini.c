@@ -964,6 +964,9 @@ int main_tini(int argc, char * const argv[])
 		exit(EXIT_FAILURE);
 	}
 
+	if (mkdir("/run/tini", DEFFILEMODE)  == -1)
+		perror("mkdir");
+
 	fd = netlink_open(&addr, SIGIO);
 	if (fd == -1)
 		return EXIT_FAILURE;
@@ -971,9 +974,6 @@ int main_tini(int argc, char * const argv[])
 	printf("tini started!\n");
 
 	spawn("/etc/init.d/rcS", rcS, NULL);
-
-	if (mkdir("/run/tini", DEFFILEMODE)  == -1)
-		perror("mkdir");
 
 	for (;;) {
 		siginfo_t siginfo;
