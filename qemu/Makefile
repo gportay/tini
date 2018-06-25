@@ -1,5 +1,5 @@
 #
-#  Copyright (C) 2017 Savoir-Faire Linux Inc.
+#  Copyright (C) 2017-2018 Savoir-Faire Linux Inc.
 #
 #  Authors:
 #      Gaël PORTAY <gael.portay@savoirfairelinux.com>
@@ -12,9 +12,9 @@
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License
+# You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
