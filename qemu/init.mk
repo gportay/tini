@@ -26,9 +26,13 @@ all:
 
 initramfs.cpio: ramfs/etc/init.d/rcS ramfs/etc/inittab
 
-ramfs/etc/init.d/rcS: rcS
+ramfs/etc/init.d:
+	mkdir -p $@
+
+ramfs/etc/init.d/rcS: rcS | ramfs/etc/init.d
 	install -D -m 755 $< $@
 
 ramfs/etc/inittab: inittab | ramfs/etc
 	install -D -m 644 $< $@
 
+# ex: filetype=makefile

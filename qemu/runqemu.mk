@@ -19,6 +19,7 @@
 #
 
 CMDLINE	?=
+QEMUFLAGS ?=
 
 # Enable console on 8250/16550 and compatible serial port
 LINUX_CONFIGS	+= CONFIG_TTY=y
@@ -68,3 +69,4 @@ runqemu: QEMUFLAGS?=-serial stdio
 runqemu:
 	qemu-system-$(shell uname -m) $(KERNELFLAG) $(INITRDFLAG) $(APPENDFLAG) $(QEMUFLAGS)
 
+# ex: filetype=makefile

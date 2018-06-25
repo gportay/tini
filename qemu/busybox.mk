@@ -27,6 +27,9 @@ all:
 .PHONY: download
 download: busybox_download
 
+.PHONY: sources
+sources: busybox_source 
+
 .PHONY: clean
 clean: busybox_clean
 
@@ -38,12 +41,10 @@ busybox: busybox/busybox
 
 .SILENT: busybox/busybox
 busybox/busybox: busybox/.config
-	echo "Compiling busybox..."
 	$(MAKE) -C busybox CONFIG_STATIC=y
 
 .SILENT: busybox/.config
 busybox/.config: busybox/Makefile
-	echo "Configuring busybox..."
 	yes "" | $(MAKE) -C busybox oldconfig
 
 .SILENT: busybox/Makefile
@@ -62,9 +63,12 @@ busybox_download:
 	head -n 1 | \
 	$(SHELL)
 
+.PHONY: busybox_source
+busybox_source:
+	git clone --single-branch git://git.busybox.net/busybox.git busybox
+
 .SILENT: ramfs/bin/busybox
 ramfs/bin/busybox: busybox/busybox
-	echo "Installing busybox..."
 	$(MAKE) -C busybox install CONFIG_STATIC=y CONFIG_PREFIX=$(CURDIR)/ramfs/
 
 .PHONY: busybox_clean
@@ -78,3 +82,4 @@ busybox_menuconfig:
 busybox_%:
 	$(MAKE) -C busybox $*
 
+# ex: filetype=makefile

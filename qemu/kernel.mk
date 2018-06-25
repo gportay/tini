@@ -44,12 +44,10 @@ bzImage: linux/arch/x86/boot/bzImage
 
 .SILENT: linux/arch/x86/boot/bzImage
 linux/arch/x86/boot/bzImage: linux/.config
-	echo "Compiling linux ($(@F))..."
 	$(MAKE) -C linux $(@F)
 
 .SILENT: linux/.config
 linux/.config: linux/Makefile kernel.cfg
-	echo "Configuring linux using tinyconfig..."
 	yes | $(MAKE) -C linux tinyconfig
 	cd linux && scripts/kconfig/merge_config.sh $(@F) $(CURDIR)/kernel.cfg
 
@@ -67,6 +65,10 @@ linux_download:
 	wget -qO- https://www.kernel.org/index.html | \
 	sed -n '/<td id="latest_link"/,/<\/td>/s,.*<a.*href="\(.*\)">\(.*\)</a>.*,wget -qO- \1 | tar xvJ \&\& ln -sf linux-\2 linux,p' | \
 	$(SHELL)
+
+.PHONY: linux_source
+linux_source:
+	git clone --single-branch git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git linux
 
 kernel.cfg:
 	for cfg in $(LINUX_CONFIGS); do \
@@ -88,3 +90,4 @@ linux_menuconfig:
 linux_%:
 	$(MAKE) -C linux $*
 
+# ex: filetype=makefile

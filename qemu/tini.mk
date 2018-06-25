@@ -53,3 +53,4 @@ ramfs/sbin/halt ramfs/sbin/poweroff ramfs/sbin/reboot: ramfs/sbin/tini | ramfs/s
 ramfs/sbin/spawn ramfs/sbin/respawn ramfs/sbin/assassinate ramfs/sbin/zombize ramfs/sbin/re-exec: ramfs/sbin/tini | ramfs/sbin
 	ln -sf $(<F) $@
 
+# ex: filetype=makefile
