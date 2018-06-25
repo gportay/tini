@@ -1,5 +1,5 @@
 #
-#  Copyright (C) 2017 Savoir-Faire Linux Inc.
+#  Copyright (C) 2017-2018 Savoir-Faire Linux Inc.
 #
 #  Authors:
 #      Gaël PORTAY <gael.portay@savoirfairelinux.com>
@@ -62,7 +62,7 @@ busybox_download:
 	head -n 1 | \
 	$(SHELL)
 
-.PHONY: rootfs/bin/busybox
+.SILENT: ramfs/bin/busybox
 ramfs/bin/busybox: busybox/busybox
 	echo "Installing busybox..."
 	$(MAKE) -C busybox install CONFIG_STATIC=y CONFIG_PREFIX=$(CURDIR)/ramfs/
