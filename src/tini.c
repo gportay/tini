@@ -329,7 +329,7 @@ int respawn(const char *path, char * const argv[], const char *devname)
 		exit(EXIT_SUCCESS);
 	}
 
-	snprintf(pidfile, sizeof(pidfile), "/run/tini/%i.pid", getpid());
+	snprintf(pidfile, sizeof(pidfile), "/run/tini/%i", getpid());
 	f = fopen(pidfile, "w");
 	if (f) {
 		char * const *arg = &argv[1];
@@ -717,7 +717,7 @@ int pid_respawn(pid_t pid)
 	struct stat statbuf;
 	int ret;
 
-	snprintf(pidfile, sizeof(pidfile), "/run/tini/%i.pid", pid);
+	snprintf(pidfile, sizeof(pidfile), "/run/tini/%i", pid);
 	if (stat(pidfile, &statbuf))
 		return 1;
 
