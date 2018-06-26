@@ -344,6 +344,9 @@ int respawn(const char *path, char * const argv[], const char *devname)
 	}
 
 	/* Daemon */
+	if (chdir("/dev") == -1)
+		perror("chdir");
+
 	close(STDIN_FILENO);
 	if (open(devname, O_RDONLY|O_NOCTTY) == -1)
 		perror("open");
@@ -354,6 +357,9 @@ int respawn(const char *path, char * const argv[], const char *devname)
 
 	close(STDERR_FILENO);
 	dup2(STDOUT_FILENO, STDERR_FILENO);
+
+	if (chdir("/") == -1)
+		perror("chdir");
 
 	execv(path, argv);
 	_exit(127);
