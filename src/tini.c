@@ -449,13 +449,13 @@ int uevent_variable(char *variable, char *value, void *data)
 	/* Spawn askfirst shell on tty2, tty3, tty4... */
 	if (!__strncmp(value, "tty")) {
 		if ((value[3] >= '2') && (value[3] <= '4') && (!value[4])) {
-			debug("Spawning /bin/sh (%s)\n", value);
-			spawn("/bin/sh", sh, value);
+			debug("Respawning /bin/sh (%s)\n", value);
+			respawn("/bin/sh", sh, value);
 		}
 	/* ... and on console */
 	} else if (!strcmp(value, "console")) {
 		debug("Spawning /bin/sh (%s)\n", value);
-		spawn("/bin/sh", sh, value);
+		respawn("/bin/sh", sh, value);
 	}
 
 	return 0;
