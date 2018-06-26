@@ -284,15 +284,15 @@ int spawn(const char *path, char * const argv[], const char *devname)
 	_exit(127);
 }
 
-int system_respawn(const char *cmdline, pid_t oldpid)
+int system_respawn(const struct process_info_t *info)
 {
 	char buf[PATH_MAX];
 	int status;
 
-	snprintf(buf, sizeof(buf), "respawn %s", cmdline);
+	snprintf(buf, sizeof(buf), "respawn %s", info->exec);
 	status = system(buf);
 	if (WIFEXITED(status)) {
-		verbose("pid %i respawned\n", oldpid);
+		verbose("pid %i respawned\n", info->oldpid);
 		status = WEXITSTATUS(status);
 	} else if (WIFSIGNALED(status)) {
 		fprintf(stderr, "%s\n", strsignal(WTERMSIG(status)));
@@ -301,8 +301,8 @@ int system_respawn(const char *cmdline, pid_t oldpid)
 	return status;
 }
 
-int respawn(const char *path, char * const argv[], const char *devname,
-	    int oldpid)
+int respawn(const char *path, char * const argv[],
+	    const struct process_info_t *info)
 {
 	char pidfile[PATH_MAX];
 	FILE *f;
@@ -351,11 +351,11 @@ int respawn(const char *path, char * const argv[], const char *devname,
 			fprintf(f, " %s", *arg++);
 		fprintf(f, "\n");
 
-		fprintf(f, "STDIN=%s\n", devname);
-		fprintf(f, "STDOUT=%s\n", devname);
-		fprintf(f, "STDERR=%s\n", devname);
-		if (oldpid != -1)
-			fprintf(f, "OLDPID=%i\n", oldpid);
+		fprintf(f, "STDIN=%s\n", info->dev_stdin);
+		fprintf(f, "STDOUT=%s\n", info->dev_stdout);
+		fprintf(f, "STDERR=%s\n", info->dev_stderr);
+		if (info->oldpid != -1)
+			fprintf(f, "OLDPID=%i\n", info->oldpid);
 
 		fclose(f);
 		f = NULL;
@@ -366,11 +366,11 @@ int respawn(const char *path, char * const argv[], const char *devname,
 		perror("chdir");
 
 	close(STDIN_FILENO);
-	if (open(devname, O_RDONLY|O_NOCTTY) == -1)
+	if (open(info->dev_stdin, O_RDONLY|O_NOCTTY) == -1)
 		perror("open");
 
 	close(STDOUT_FILENO);
-	if (open(devname, O_WRONLY|O_NOCTTY) == -1)
+	if (open(info->dev_stdout, O_WRONLY|O_NOCTTY) == -1)
 		perror("open");
 
 	close(STDERR_FILENO);
@@ -446,20 +446,29 @@ int uevent_event(char *action, char *devpath, void *data)
 
 int uevent_variable(char *variable, char *value, void *data)
 {
+	struct process_info_t info;
+
 	(void)data;
 	if (strcmp(variable, "DEVNAME"))
 		return 0;
 
+	memset(&info, 0, sizeof(info));
+	info.exec = "/bin/sh";
+	info.dev_stdin = value;
+	info.dev_stdout = value;
+	info.dev_stderr = value;
+	info.oldpid = -1;
+
 	/* Spawn shell on tty2, tty3, tty4... */
 	if (!__strncmp(value, "tty")) {
 		if ((value[3] >= '2') && (value[3] <= '4') && (!value[4])) {
-			debug("Respawning /bin/sh (%s)\n", value);
-			respawn("/bin/sh", sh, value, -1);
+			debug("Respawning /bin/sh (%s)\n", info.dev_stdout);
+			respawn("/bin/sh", sh, &info);
 		}
 	/* ... and on console */
 	} else if (!strcmp(value, "console")) {
-		debug("Spawning /bin/sh (%s)\n", value);
-		respawn("/bin/sh", sh, value, -1);
+		debug("Spawning /bin/sh (%s)\n", info.dev_stdout);
+		respawn("/bin/sh", sh, &info);
 	}
 
 	return 0;
@@ -763,7 +772,7 @@ int pid_respawn(pid_t pid, int status)
 	ret = pidfile_parse(pidfile, pidfile_info, &info);
 	info.oldpid = pid;
 	if (info.exec)
-		system_respawn(info.exec, pid);
+		system_respawn(&info);
 
 	if (unlink(pidfile) == -1)
 		perror("unlink");
@@ -864,6 +873,7 @@ int main_spawn(int argc, char * const argv[])
 
 int main_respawn(int argc, char * const argv[])
 {
+	struct process_info_t info;
 	char **arg = (char **)argv;
 	int i;
 
@@ -871,7 +881,14 @@ int main_respawn(int argc, char * const argv[])
 		arg[i] = arg[i+1];
 	arg[i] = NULL;
 
-	return respawn(argv[0], argv, "/dev/null", -1);
+	memset(&info, 0, sizeof(info));
+	info.exec = "/bin/sh";
+	info.dev_stdin = "null";
+	info.dev_stdout = "null";
+	info.dev_stderr = "null";
+	info.oldpid = -1;
+
+	return respawn(argv[0], argv, &info);
 }
 
 int main_assassinate(int argc, char * const argv[])
