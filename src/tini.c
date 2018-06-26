@@ -90,6 +90,7 @@ struct process_info_t {
 	const char *dev_stdin;
 	const char *dev_stdout;
 	const char *dev_stderr;
+	pid_t oldpid;
 };
 
 struct options_t {
@@ -300,7 +301,8 @@ int system_respawn(const char *cmdline, pid_t oldpid)
 	return status;
 }
 
-int respawn(const char *path, char * const argv[], const char *devname)
+int respawn(const char *path, char * const argv[], const char *devname,
+	    int oldpid)
 {
 	char pidfile[PATH_MAX];
 	FILE *f;
@@ -352,6 +354,8 @@ int respawn(const char *path, char * const argv[], const char *devname)
 		fprintf(f, "STDIN=%s\n", devname);
 		fprintf(f, "STDOUT=%s\n", devname);
 		fprintf(f, "STDERR=%s\n", devname);
+		if (oldpid != -1)
+			fprintf(f, "OLDPID=%i\n", oldpid);
 
 		fclose(f);
 		f = NULL;
@@ -450,12 +454,12 @@ int uevent_variable(char *variable, char *value, void *data)
 	if (!__strncmp(value, "tty")) {
 		if ((value[3] >= '2') && (value[3] <= '4') && (!value[4])) {
 			debug("Respawning /bin/sh (%s)\n", value);
-			respawn("/bin/sh", sh, value);
+			respawn("/bin/sh", sh, value, -1);
 		}
 	/* ... and on console */
 	} else if (!strcmp(value, "console")) {
 		debug("Spawning /bin/sh (%s)\n", value);
-		respawn("/bin/sh", sh, value);
+		respawn("/bin/sh", sh, value, -1);
 	}
 
 	return 0;
@@ -715,6 +719,8 @@ int pidfile_info(char *variable, char *value, void *data)
 		info->dev_stdout = value;
 	else if (!strcmp(variable, "STDERR"))
 		info->dev_stderr = value;
+	else if (!strcmp(variable, "OLDPID"))
+		info->oldpid = strtol(value, NULL, 0);
 
 	return 0;
 }
@@ -753,7 +759,9 @@ int pid_respawn(pid_t pid, int status)
 		return 1;
 
 	memset(&info, 0, sizeof(info));
+	info.oldpid = -1;
 	ret = pidfile_parse(pidfile, pidfile_info, &info);
+	info.oldpid = pid;
 	if (info.exec)
 		system_respawn(info.exec, pid);
 
@@ -784,6 +792,7 @@ int pidfile_assassinate(const char *path, struct dirent *entry, void *data)
 	snprintf(pidfile, sizeof(pidfile), "%s/%s", path, entry->d_name);
 
 	memset(&info, 0, sizeof(info));
+	info.oldpid = -1;
 	pidfile_parse(pidfile, pidfile_info, &info);
 
 	if (!strcmp(info.exec, (const char *)data)) {
@@ -862,7 +871,7 @@ int main_respawn(int argc, char * const argv[])
 		arg[i] = arg[i+1];
 	arg[i] = NULL;
 
-	return respawn(argv[0], argv, "/dev/null");
+	return respawn(argv[0], argv, "/dev/null", -1);
 }
 
 int main_assassinate(int argc, char * const argv[])
