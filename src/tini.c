@@ -63,6 +63,14 @@ static char *sh[] = { "-sh", NULL };
 	errno = __error; \
 } while(0)
 
+static inline const char *__getenv(const char *name, const char *undef) {
+	const char *env = getenv(name);
+	if (!env)
+		env = undef;
+
+	return env;
+}
+
 #ifndef UEVENT_BUFFER_SIZE
 #define UEVENT_BUFFER_SIZE 2048
 #endif
@@ -289,7 +297,9 @@ int system_respawn(const struct process_info_t *info)
 	char buf[PATH_MAX];
 	int status;
 
-	snprintf(buf, sizeof(buf), "respawn %s", info->exec);
+	snprintf(buf, sizeof(buf), "STDIN=%s STDOUT=%s STDERR=%s respawn %s",
+		 info->dev_stdin, info->dev_stdout, info->dev_stderr,
+		 info->exec);
 	status = system(buf);
 	if (WIFEXITED(status)) {
 		verbose("pid %i respawned\n", info->oldpid);
@@ -883,9 +893,9 @@ int main_respawn(int argc, char * const argv[])
 
 	memset(&info, 0, sizeof(info));
 	info.exec = "/bin/sh";
-	info.dev_stdin = "null";
-	info.dev_stdout = "null";
-	info.dev_stderr = "null";
+	info.dev_stdin = __getenv("STDIN", "null");
+	info.dev_stdout = __getenv("STDOUT", "null");
+	info.dev_stderr = __getenv("STDERR", "null");
 	info.oldpid = -1;
 
 	return respawn(argv[0], argv, &info);
