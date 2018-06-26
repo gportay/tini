@@ -82,6 +82,15 @@ int uevent_parse_line(char *line,
 typedef int variable_cb_t(char *, char *, void *);
 int variable_parse_line(char *line, variable_cb_t *callback, void *data);
 
+typedef int directory_cb_t(const char *, struct dirent *, void *);
+
+struct process_info_t {
+	const char *exec;
+	const char *dev_stdin;
+	const char *dev_stdout;
+	const char *dev_stderr;
+};
+
 struct options_t {
 	int argc;
 	char * const *argv;
@@ -338,6 +347,10 @@ int respawn(const char *path, char * const argv[], const char *devname)
 		while (*arg)
 			fprintf(f, " %s", *arg++);
 		fprintf(f, "\n");
+
+		fprintf(f, "STDIN=%s\n", devname);
+		fprintf(f, "STDOUT=%s\n", devname);
+		fprintf(f, "STDERR=%s\n", devname);
 
 		fclose(f);
 		f = NULL;
@@ -689,6 +702,22 @@ ssize_t variable_read(int fd, variable_cb_t cb, void *data)
 	return len;
 }
 
+int pidfile_info(char *variable, char *value, void *data)
+{
+	struct process_info_t *info = (struct process_info_t *)data;
+
+	if (!strcmp(variable, "EXEC"))
+		info->exec = value;
+	else if (!strcmp(variable, "STDIN"))
+		info->dev_stdin = value;
+	else if (!strcmp(variable, "STDOUT"))
+		info->dev_stdout = value;
+	else if (!strcmp(variable, "STDERR"))
+		info->dev_stderr = value;
+
+	return 0;
+}
+
 int pidfile_parse(const char *pidfile, variable_cb_t *callback, void *data)
 {
 	int fd, ret;
@@ -707,18 +736,9 @@ int pidfile_parse(const char *pidfile, variable_cb_t *callback, void *data)
 	return ret;
 }
 
-int pidfile_respawn(char *variable, char *value, void *data)
-{
-	pid_t *pid = (pid_t *)data;
-
-	if (!strcmp(variable, "EXEC"))
-		system_respawn(value, *pid);
-
-	return 0;
-}
-
 int pid_respawn(pid_t pid, int status)
 {
+	struct process_info_t info;
 	char pidfile[PATH_MAX];
 	struct stat statbuf;
 	int ret;
@@ -731,7 +751,10 @@ int pid_respawn(pid_t pid, int status)
 	if (stat(pidfile, &statbuf))
 		return 1;
 
-	ret = pidfile_parse(pidfile, pidfile_respawn, &pid);
+	memset(&info, 0, sizeof(info));
+	ret = pidfile_parse(pidfile, pidfile_info, &info);
+	if (info.exec)
+		system_respawn(info.exec, pid);
 
 	if (unlink(pidfile) == -1)
 		perror("unlink");
@@ -751,13 +774,32 @@ char *strargv(char *buf, size_t bufsize, char * const argv[])
 	return buf;
 }
 
-int pidfile_execline(char *variable, char *value, void *data)
+int pidfile_assassinate(const char *path, struct dirent *entry, void *data)
 {
-	return !strcmp(variable, "EXEC") &&
-	       !strcmp(value, (const char *)data);
+	struct process_info_t info;
+	char pidfile[BUFSIZ];
+	pid_t pid;
+
+	snprintf(pidfile, sizeof(pidfile), "%s/%s", path, entry->d_name);
+
+	memset(&info, 0, sizeof(info));
+	pidfile_parse(pidfile, pidfile_info, &info);
+
+	if (!strcmp(info.exec, (const char *)data)) {
+		if (unlink(pidfile) == -1)
+			perror("unlink");
+
+		pid = strtol(entry->d_name, NULL, 0);
+		if (kill(pid, SIGKILL) == -1)
+			perror("kill");
+
+		verbose("pid %i assassinated\n", pid);
+	}
+
+	return 0;
 }
 
-int rundir_parse(const char *path, variable_cb_t *callback, void *data)
+int rundir_parse(const char *path, directory_cb_t *callback, void *data)
 {
 	struct dirent **namelist;
 	int n, ret = 0;
@@ -771,22 +813,7 @@ int rundir_parse(const char *path, variable_cb_t *callback, void *data)
 	while (n--) {
 		if (strcmp(namelist[n]->d_name, ".") &&
 		    strcmp(namelist[n]->d_name, "..")) {
-			char pidfile[BUFSIZ];
-			pid_t pid;
-
-			snprintf(pidfile, sizeof(pidfile), "%s/%s", path,
-				 namelist[n]->d_name);
-
-			if (pidfile_parse(pidfile, callback, data)) {
-				if (unlink(pidfile) == -1)
-					perror("unlink");
-
-				pid = strtol(namelist[n]->d_name, NULL, 0);
-				if (kill(pid, SIGKILL) == -1)
-					perror("kill");
-
-				verbose("pid %i assassinated\n", pid);
-			}
+			callback(path, namelist[n], data);
 		}
 		free(namelist[n]);
 	}
@@ -849,7 +876,7 @@ int main_assassinate(int argc, char * const argv[])
 
 	strargv(execline, sizeof(execline), arg);
 
-	return rundir_parse("/run/tini", pidfile_execline, execline);
+	return rundir_parse("/run/tini", pidfile_assassinate, execline);
 }
 
 int main_zombize(int argc, char * const argv[])
