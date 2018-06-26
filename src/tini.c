@@ -446,7 +446,7 @@ int uevent_variable(char *variable, char *value, void *data)
 	if (strcmp(variable, "DEVNAME"))
 		return 0;
 
-	/* Spawn askfirst shell on tty2, tty3, tty4... */
+	/* Spawn shell on tty2, tty3, tty4... */
 	if (!__strncmp(value, "tty")) {
 		if ((value[3] >= '2') && (value[3] <= '4') && (!value[4])) {
 			debug("Respawning /bin/sh (%s)\n", value);
