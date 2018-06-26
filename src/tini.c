@@ -711,11 +711,15 @@ int pidfile_respawn(char *variable, char *value, void *data)
 	return 0;
 }
 
-int pid_respawn(pid_t pid)
+int pid_respawn(pid_t pid, int status)
 {
 	char pidfile[PATH_MAX];
 	struct stat statbuf;
 	int ret;
+
+	/* command not found */
+	if (status == 127)
+		return 1;
 
 	snprintf(pidfile, sizeof(pidfile), "/run/tini/%i", pid);
 	if (stat(pidfile, &statbuf))
@@ -993,7 +997,7 @@ int main_tini(int argc, char * const argv[])
 			verbose("pid %i exited with status %i\n",
 				siginfo.si_pid, siginfo.si_status);
 
-			pid_respawn(siginfo.si_pid);
+			pid_respawn(siginfo.si_pid, siginfo.si_status);
 			while (waitpid(-1, NULL, WNOHANG) > 0);
 			continue;
 		}
