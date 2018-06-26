@@ -83,6 +83,7 @@ typedef int variable_cb_t(char *, char *, void *);
 int variable_parse_line(char *line, variable_cb_t *callback, void *data);
 
 typedef int directory_cb_t(const char *, struct dirent *, void *);
+int dir_parse(const char *path, directory_cb_t *callback, void *data);
 
 struct process_info_t {
 	const char *exec;
@@ -799,7 +800,7 @@ int pidfile_assassinate(const char *path, struct dirent *entry, void *data)
 	return 0;
 }
 
-int rundir_parse(const char *path, directory_cb_t *callback, void *data)
+int dir_parse(const char *path, directory_cb_t *callback, void *data)
 {
 	struct dirent **namelist;
 	int n, ret = 0;
@@ -876,7 +877,7 @@ int main_assassinate(int argc, char * const argv[])
 
 	strargv(execline, sizeof(execline), arg);
 
-	return rundir_parse("/run/tini", pidfile_assassinate, execline);
+	return dir_parse("/run/tini", pidfile_assassinate, execline);
 }
 
 int main_zombize(int argc, char * const argv[])
