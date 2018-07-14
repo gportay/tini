@@ -1,0 +1,11 @@
+# This is an example of a inittab which resembles the old Linux inittab:
+
+# inittab for linux
+id:1:initdefault:
+rc::bootwait:/etc/rc
+1:1:respawn:/etc/getty 9600 tty1
+2:1:respawn:/etc/getty 9600 tty2
+3:1:respawn:/etc/getty 9600 tty3
+4:1:respawn:/etc/getty 9600 tty4
+
+# This inittab file executes /etc/rc during boot and starts gettys on tty1−tty4.
