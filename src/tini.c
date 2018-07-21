@@ -101,6 +101,10 @@ struct process_info_t {
 	pid_t oldpid;
 };
 
+int spawn(const char *path, char * const argv[], const char *devname);
+int respawn(const char *path, char * const argv[],
+	    const struct process_info_t *info);
+
 struct options_t {
 	int argc;
 	char * const *argv;
