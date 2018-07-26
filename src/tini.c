@@ -98,12 +98,12 @@ struct process_info_t {
 	const char *dev_stdin;
 	const char *dev_stdout;
 	const char *dev_stderr;
+	int counter;
 	pid_t oldpid;
 };
 
 int spawn(const char *path, char * const argv[], const char *devname);
-int respawn(const char *path, char * const argv[],
-	    const struct process_info_t *info);
+int respawn(const char *path, char * const argv[], struct process_info_t *info);
 
 struct options_t {
 	int argc;
@@ -296,14 +296,15 @@ int spawn(const char *path, char * const argv[], const char *devname)
 	_exit(127);
 }
 
-int system_respawn(const struct process_info_t *info)
+int system_respawn(struct process_info_t *info)
 {
 	char buf[PATH_MAX];
 	int status;
 
-	snprintf(buf, sizeof(buf), "STDIN=%s STDOUT=%s STDERR=%s respawn %s",
+	snprintf(buf, sizeof(buf), "STDIN=%s STDOUT=%s STDERR=%s COUNTER=%i "
+		 "respawn %s",
 		 info->dev_stdin, info->dev_stdout, info->dev_stderr,
-		 info->exec);
+		 info->counter, info->exec);
 	status = system(buf);
 	if (WIFEXITED(status)) {
 		verbose("pid %i respawned\n", info->oldpid);
@@ -315,8 +316,7 @@ int system_respawn(const struct process_info_t *info)
 	return status;
 }
 
-int respawn(const char *path, char * const argv[],
-	    const struct process_info_t *info)
+int respawn(const char *path, char * const argv[], struct process_info_t *info)
 {
 	char pidfile[PATH_MAX];
 	FILE *f;
@@ -341,10 +341,14 @@ int respawn(const char *path, char * const argv[],
 		else if (WIFSIGNALED(status))
 			fprintf(stderr, "%s\n", strsignal(WTERMSIG(status)));
 
+		if (status == 0)
+			info->counter++;
+
 		return status;
 	}
 
 	netlink_close(nl_fd);
+	info->counter++;
 
 	/* Child */
 	pid = fork();
@@ -368,6 +372,7 @@ int respawn(const char *path, char * const argv[],
 		fprintf(f, "STDIN=%s\n", info->dev_stdin);
 		fprintf(f, "STDOUT=%s\n", info->dev_stdout);
 		fprintf(f, "STDERR=%s\n", info->dev_stderr);
+		fprintf(f, "COUNTER=%i\n", info->counter);
 		if (info->oldpid != -1)
 			fprintf(f, "OLDPID=%i\n", info->oldpid);
 
@@ -742,6 +747,8 @@ int pidfile_info(char *variable, char *value, void *data)
 		info->dev_stdout = value;
 	else if (!strcmp(variable, "STDERR"))
 		info->dev_stderr = value;
+	else if (!strcmp(variable, "COUNTER"))
+		info->counter = strtol(value, NULL, 0);
 	else if (!strcmp(variable, "OLDPID"))
 		info->oldpid = strtol(value, NULL, 0);
 
@@ -900,6 +907,7 @@ int main_respawn(int argc, char * const argv[])
 	info.dev_stdin = __getenv("STDIN", "null");
 	info.dev_stdout = __getenv("STDOUT", "null");
 	info.dev_stderr = __getenv("STDERR", "null");
+	info.counter = strtol(__getenv("COUNTER", "0"), NULL, 0);
 	info.oldpid = -1;
 
 	return respawn(argv[0], argv, &info);
