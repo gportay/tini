@@ -97,6 +97,7 @@ typedef int directory_cb_t(const char *, struct dirent *, void *);
 int dir_parse(const char *path, directory_cb_t *callback, void *data);
 
 struct process_info_t {
+	char cmdline[PATH_MAX];
 	const char *exec;
 	const char *dev_stdin;
 	const char *dev_stdout;
@@ -299,26 +300,6 @@ int spawn(const char *path, char * const argv[], const char *devname)
 	_exit(127);
 }
 
-int system_respawn(struct process_info_t *info)
-{
-	char buf[PATH_MAX];
-	int status;
-
-	snprintf(buf, sizeof(buf), "STDIN=%s STDOUT=%s STDERR=%s COUNTER=%i "
-		 "OLDPID=%i respawn %s",
-		 info->dev_stdin, info->dev_stdout, info->dev_stderr,
-		 info->counter, info->oldpid, info->exec);
-	status = system(buf);
-	if (WIFEXITED(status)) {
-		verbose("pid %i respawned\n", info->oldpid);
-		status = WEXITSTATUS(status);
-	} else if (WIFSIGNALED(status)) {
-		fprintf(stderr, "%s\n", strsignal(WTERMSIG(status)));
-	}
-
-	return status;
-}
-
 int respawn(const char *path, char * const argv[], struct process_info_t *info)
 {
 	char pidfile[PATH_MAX];
@@ -378,6 +359,11 @@ int respawn(const char *path, char * const argv[], struct process_info_t *info)
 		fprintf(f, "COUNTER=%i\n", info->counter);
 		if (info->oldpid != -1)
 			fprintf(f, "OLDPID=%i\n", info->oldpid);
+		arg = argv;
+		fprintf(f, "CMDLINE=%s%c", path, CFS[0]);
+		while (*arg)
+			fprintf(f, "%s%c", *arg++, CFS[0]);
+		fprintf(f, "\n");
 
 		fclose(f);
 		f = NULL;
@@ -754,6 +740,8 @@ int pidfile_info(char *variable, char *value, void *data)
 		info->counter = strtol(value, NULL, 0);
 	else if (!strcmp(variable, "OLDPID"))
 		info->oldpid = strtol(value, NULL, 0);
+	else if (!strcmp(variable, "CMDLINE"))
+		strncpy(info->cmdline, value, PATH_MAX);
 
 	return 0;
 }
@@ -795,9 +783,15 @@ int pid_respawn(pid_t pid, int status)
 	info.oldpid = -1;
 	ret = pidfile_parse(pidfile, pidfile_info, &info);
 	info.oldpid = pid;
-	if (info.exec)
-		system_respawn(&info);
+	if (info.cmdline) {
+		char *argv[10];
+		if (!strtonargv(argv, info.cmdline, 10)) {
+			perror("strtonargv");
+			return -1;
+		}
 
+		ret = respawn(argv[0], &argv[1], &info);
+	}
 	if (unlink(pidfile) == -1)
 		perror("unlink");
 
