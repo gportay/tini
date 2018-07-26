@@ -71,6 +71,9 @@ static inline const char *__getenv(const char *name, const char *undef) {
 	return env;
 }
 
+static char *CFS = " \t\n"; /* Command-line Field Separator */
+char **strtonargv(char *dest[], char *src, size_t n);
+
 #ifndef UEVENT_BUFFER_SIZE
 #define UEVENT_BUFFER_SIZE 2048
 #endif
@@ -811,6 +814,36 @@ char *strargv(char *buf, size_t bufsize, char * const argv[])
 		size += snprintf(&buf[size], size - bufsize, " %s", *arg++);
 
 	return buf;
+}
+
+char **strtonargv(char *dest[], char *src, size_t n)
+{
+	char **arg = dest;
+	char *str = src;
+	char *s = NULL;
+
+	if (!dest) {
+		errno = EINVAL;
+		return NULL;
+	}
+
+	for (;;) {
+		if (!n)
+			break;
+
+		s = strchr(str, CFS[0]);
+		if (!s)
+			break;
+
+		*s = '\0'; /* CFS[0] <- NUL */
+		s++; /* s = next cstring */
+		n--;
+		*arg++ = str;
+		str = s;
+	}
+
+	*arg = NULL;
+	return dest;
 }
 
 int pidfile_assassinate(const char *path, struct dirent *entry, void *data)
