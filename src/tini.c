@@ -302,9 +302,9 @@ int system_respawn(struct process_info_t *info)
 	int status;
 
 	snprintf(buf, sizeof(buf), "STDIN=%s STDOUT=%s STDERR=%s COUNTER=%i "
-		 "respawn %s",
+		 "OLDPID=%i respawn %s",
 		 info->dev_stdin, info->dev_stdout, info->dev_stderr,
-		 info->counter, info->exec);
+		 info->counter, info->oldpid, info->exec);
 	status = system(buf);
 	if (WIFEXITED(status)) {
 		verbose("pid %i respawned\n", info->oldpid);
@@ -908,7 +908,7 @@ int main_respawn(int argc, char * const argv[])
 	info.dev_stdout = __getenv("STDOUT", "null");
 	info.dev_stderr = __getenv("STDERR", "null");
 	info.counter = strtol(__getenv("COUNTER", "0"), NULL, 0);
-	info.oldpid = -1;
+	info.oldpid = strtol(__getenv("OLDPID", "-1"), NULL, 0);
 
 	return respawn(argv[0], argv, &info);
 }
