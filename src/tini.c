@@ -103,6 +103,7 @@ struct process_info_t {
 	const char *dev_stdout;
 	const char *dev_stderr;
 	int counter;
+	int oldstatus;
 	pid_t oldpid;
 };
 
@@ -357,6 +358,8 @@ int respawn(const char *path, char * const argv[], struct process_info_t *info)
 		fprintf(f, "STDOUT=%s\n", info->dev_stdout);
 		fprintf(f, "STDERR=%s\n", info->dev_stderr);
 		fprintf(f, "COUNTER=%i\n", info->counter);
+		if (info->oldstatus != -1)
+			fprintf(f, "OLDSTATUS=%i\n", info->oldstatus);
 		if (info->oldpid != -1)
 			fprintf(f, "OLDPID=%i\n", info->oldpid);
 		arg = argv;
@@ -465,6 +468,7 @@ int uevent_variable(char *variable, char *value, void *data)
 	info.dev_stdin = value;
 	info.dev_stdout = value;
 	info.dev_stderr = value;
+	info.oldstatus = -1;
 	info.oldpid = -1;
 
 	/* Spawn shell on tty2, tty3, tty4... */
@@ -738,6 +742,8 @@ int pidfile_info(char *variable, char *value, void *data)
 		info->dev_stderr = value;
 	else if (!strcmp(variable, "COUNTER"))
 		info->counter = strtol(value, NULL, 0);
+	else if (!strcmp(variable, "OLDSTATUS"))
+		info->oldstatus = strtol(value, NULL, 0);
 	else if (!strcmp(variable, "OLDPID"))
 		info->oldpid = strtol(value, NULL, 0);
 	else if (!strcmp(variable, "CMDLINE"))
@@ -780,8 +786,10 @@ int pid_respawn(pid_t pid, int status)
 		return 1;
 
 	memset(&info, 0, sizeof(info));
+	info.oldstatus = -1;
 	info.oldpid = -1;
 	ret = pidfile_parse(pidfile, pidfile_info, &info);
+	info.oldstatus = status;
 	info.oldpid = pid;
 	if (info.cmdline) {
 		char *argv[10];
@@ -849,6 +857,7 @@ int pidfile_assassinate(const char *path, struct dirent *entry, void *data)
 	snprintf(pidfile, sizeof(pidfile), "%s/%s", path, entry->d_name);
 
 	memset(&info, 0, sizeof(info));
+	info.oldstatus = -1;
 	info.oldpid = -1;
 	pidfile_parse(pidfile, pidfile_info, &info);
 
@@ -935,6 +944,7 @@ int main_respawn(int argc, char * const argv[])
 	info.dev_stdout = __getenv("STDOUT", "null");
 	info.dev_stderr = __getenv("STDERR", "null");
 	info.counter = strtol(__getenv("COUNTER", "0"), NULL, 0);
+	info.oldstatus = strtol(__getenv("OLDSTATUS", "-1"), NULL, 0);
 	info.oldpid = strtol(__getenv("OLDPID", "-1"), NULL, 0);
 
 	return respawn(argv[0], argv, &info);
