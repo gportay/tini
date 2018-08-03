@@ -344,6 +344,10 @@ int respawn(const char *path, char * const argv[], struct process_info_t *info)
 		exit(EXIT_SUCCESS);
 	}
 
+	/*
+	 * TODO: check for fprintf returned values
+	 *       serialize in a dedicated function
+	 */
 	snprintf(pidfile, sizeof(pidfile), "/run/tini/%i", getpid());
 	f = fopen(pidfile, "w");
 	if (f) {
@@ -464,7 +468,7 @@ int uevent_variable(char *variable, char *value, void *data)
 		return 0;
 
 	memset(&info, 0, sizeof(info));
-	info.exec = "/bin/sh";
+	info.exec = "/bin/sh"; /* unused */
 	info.dev_stdin = value;
 	info.dev_stdout = value;
 	info.dev_stderr = value;
@@ -789,6 +793,8 @@ int pid_respawn(pid_t pid, int status)
 	info.oldstatus = -1;
 	info.oldpid = -1;
 	ret = pidfile_parse(pidfile, pidfile_info, &info);
+
+	/* overwrite values */
 	info.oldstatus = status;
 	info.oldpid = pid;
 	if (info.cmdline) {
@@ -927,6 +933,8 @@ int main_spawn(int argc, char * const argv[])
 		return EXIT_FAILURE;
 	}
 
+	/* Shift arguments to remove first argument (path), and append a NULL
+	   pointer (execv) */
 	for (i = 0; i < (argc - 1); i++)
 		arg[i] = arg[i+1];
 	arg[i] = NULL;
@@ -946,12 +954,14 @@ int main_respawn(int argc, char * const argv[])
 		return EXIT_FAILURE;
 	}
 
+	/* Shift arguments to remove first argument (path), and append a NULL
+	   pointer (execv) */
 	for (i = 0; i < (argc - 1); i++)
 		arg[i] = arg[i+1];
 	arg[i] = NULL;
 
 	memset(&info, 0, sizeof(info));
-	info.exec = "/bin/sh";
+	info.exec = "/bin/sh"; /* unused */
 	info.dev_stdin = __getenv("STDIN", "null");
 	info.dev_stdout = __getenv("STDOUT", "null");
 	info.dev_stderr = __getenv("STDERR", "null");
@@ -974,6 +984,8 @@ int main_assassinate(int argc, char * const argv[])
 		return EXIT_FAILURE;
 	}
 
+	/* Shift arguments to remove first argument (path), and append a NULL
+	   pointer (execv) */
 	for (i = 0; i < (argc - 1); i++)
 		arg[i] = arg[i+1];
 	arg[i] = NULL;
@@ -994,6 +1006,8 @@ int main_zombize(int argc, char * const argv[])
 		return EXIT_FAILURE;
 	}
 
+	/* Shift arguments to remove first argument (path), and append a NULL
+	   pointer (execv) */
 	for (i = 0; i < (argc - 1); i++)
 		arg[i] = arg[i+1];
 	arg[i] = NULL;
