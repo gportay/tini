@@ -921,6 +921,12 @@ int main_spawn(int argc, char * const argv[])
 	char **arg = (char **)argv;
 	int i;
 
+	if (argc < 2) {
+		fprintf(stderr, "Usage: %s PATH [ARGV...]\n\n"
+				"Error: Too few arguments!\n", argv[0]);
+		return EXIT_FAILURE;
+	}
+
 	for (i = 0; i < (argc - 1); i++)
 		arg[i] = arg[i+1];
 	arg[i] = NULL;
@@ -933,6 +939,12 @@ int main_respawn(int argc, char * const argv[])
 	struct process_info_t info;
 	char **arg = (char **)argv;
 	int i;
+
+	if (argc < 2) {
+		fprintf(stderr, "Usage: %s PATH [ARGV...]\n\n"
+				"Error: Too few arguments!\n", argv[0]);
+		return EXIT_FAILURE;
+	}
 
 	for (i = 0; i < (argc - 1); i++)
 		arg[i] = arg[i+1];
@@ -956,6 +968,12 @@ int main_assassinate(int argc, char * const argv[])
 	char execline[BUFSIZ];
 	int i;
 
+	if (argc < 2) {
+		fprintf(stderr, "Usage: %s PATH [ARGV...]\n\n"
+				"Error: Too few arguments!\n", argv[0]);
+		return EXIT_FAILURE;
+	}
+
 	for (i = 0; i < (argc - 1); i++)
 		arg[i] = arg[i+1];
 	arg[i] = NULL;
@@ -969,6 +987,12 @@ int main_zombize(int argc, char * const argv[])
 {
 	char **arg = (char **)argv;
 	int i;
+
+	if (argc < 2) {
+		fprintf(stderr, "Usage: %s PATH [ARGV...]\n\n"
+				"Error: Too few arguments!\n", argv[0]);
+		return EXIT_FAILURE;
+	}
 
 	for (i = 0; i < (argc - 1); i++)
 		arg[i] = arg[i+1];
