@@ -181,61 +181,6 @@ int zombize(const char *path, char * const argv[], const char *devname)
 	_exit(127);
 }
 
-int run(const char *path, char * const argv[], const char *devname)
-{
-	pid_t pid = fork();
-	if (pid == -1) {
-		perror("fork");
-		return -1;
-	}
-
-	/* Parent */
-	if (pid) {
-		int status;
-
-		if (waitpid(pid, &status, 0) == -1) {
-			perror("waitpid");
-			return -1;
-		}
-
-		if (WIFEXITED(status))
-			status = WEXITSTATUS(status);
-		else if (WIFSIGNALED(status))
-			fprintf(stderr, "%s\n", strsignal(WTERMSIG(status)));
-
-		return status;
-	}
-
-	netlink_close(nl_fd);
-
-	/* Child */
-	if (devname) {
-		int fd;
-
-		if (chdir("/dev") == -1)
-			perror("chdir");
-
-		close(STDIN_FILENO);
-		fd = open(devname, O_RDONLY|O_NOCTTY);
-		if (fd == -1)
-			perror("open");
-
-		close(STDOUT_FILENO);
-		fd = open(devname, O_WRONLY|O_NOCTTY);
-		if (fd == -1)
-			perror("open");
-
-		close(STDERR_FILENO);
-		dup2(STDOUT_FILENO, STDERR_FILENO);
-
-		if (chdir("/") == -1)
-			perror("chdir");
-	}
-
-	execv(path, argv);
-	_exit(127);
-}
-
 int spawn(const char *path, char * const argv[], const char *devname)
 {
 	pid_t pid = fork();
