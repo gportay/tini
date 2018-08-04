@@ -72,7 +72,7 @@ static inline const char *__getenv(const char *name, const char *undef) {
 }
 
 static char *CFS = " \t\n"; /* Command-line Field Separator */
-char **strtonargv(char *dest[], char *src, size_t n);
+char **strtonargv(char *dest[], char *src, int *n);
 
 #ifndef UEVENT_BUFFER_SIZE
 #define UEVENT_BUFFER_SIZE 2048
@@ -735,13 +735,18 @@ int pid_respawn(pid_t pid, int status)
 	info.oldstatus = status;
 	info.oldpid = pid;
 	if (*info.exec) {
-		char *argv[10];
-		if (!strtonargv(argv, info.exec, 10)) {
-			perror("strtonargv");
-			return -1;
-		}
+		int argc = 127;
 
-		ret = respawn(argv[0], &argv[1], &info);
+		strtonargv(NULL, info.exec, &argc);
+		if (argc > 0) {
+			char *argv[argc];
+			if (!strtonargv(argv, info.exec, &argc)) {
+				perror("strtonargv");
+				return -1;
+			}
+
+			ret = respawn(argv[0], &argv[1], &info);
+		}
 	}
 	if (unlink(pidfile) == -1)
 		perror("unlink");
@@ -761,33 +766,40 @@ char *strargv(char *buf, size_t bufsize, char * const argv[])
 	return buf;
 }
 
-char **strtonargv(char *dest[], char *src, size_t n)
+char **strtonargv(char *dest[], char *src, int *n)
 {
 	char **arg = dest;
 	char *str = src;
 	char *s = NULL;
+	int i = 0;
 
-	if (!dest) {
+	if (!n || *n < 0) {
 		errno = EINVAL;
 		return NULL;
 	}
 
 	for (;;) {
-		if (!n)
+		if (!*n)
 			break;
 
 		s = strchr(str, CFS[0]);
 		if (!s)
 			break;
 
-		*s = '\0'; /* CFS[0] <- NUL */
+		if (arg)
+			*s = '\0'; /* CFS[0] <- NUL */
 		s++; /* s = next cstring */
-		n--;
-		*arg++ = str;
+		(*n)--;
+		i++;
+		if (arg)
+			*arg++ = str;
 		str = s;
 	}
 
-	*arg = NULL;
+	if (arg)
+		*arg = NULL;
+
+	*n = i;
 	return dest;
 }
 
