@@ -97,8 +97,7 @@ typedef int directory_cb_t(const char *, struct dirent *, void *);
 int dir_parse(const char *path, directory_cb_t *callback, void *data);
 
 struct process_info_t {
-	char cmdline[PATH_MAX];
-	const char *exec;
+	char exec[PATH_MAX];
 	const char *dev_stdin;
 	const char *dev_stdout;
 	const char *dev_stderr;
@@ -351,11 +350,11 @@ int respawn(const char *path, char * const argv[], struct process_info_t *info)
 	snprintf(pidfile, sizeof(pidfile), "/run/tini/%i", getpid());
 	f = fopen(pidfile, "w");
 	if (f) {
-		char * const *arg = &argv[1];
+		char * const *arg = argv;
 
-		fprintf(f, "EXEC=%s", path);
+		fprintf(f, "EXEC=%s%c", path, CFS[0]);
 		while (*arg)
-			fprintf(f, " %s", *arg++);
+			fprintf(f, "%s%c", *arg++, CFS[0]);
 		fprintf(f, "\n");
 
 		fprintf(f, "STDIN=%s\n", info->dev_stdin);
@@ -367,10 +366,6 @@ int respawn(const char *path, char * const argv[], struct process_info_t *info)
 		if (info->oldpid != -1)
 			fprintf(f, "OLDPID=%i\n", info->oldpid);
 		arg = argv;
-		fprintf(f, "CMDLINE=%s%c", path, CFS[0]);
-		while (*arg)
-			fprintf(f, "%s%c", *arg++, CFS[0]);
-		fprintf(f, "\n");
 
 		fclose(f);
 		f = NULL;
@@ -468,7 +463,6 @@ int uevent_variable(char *variable, char *value, void *data)
 		return 0;
 
 	memset(&info, 0, sizeof(info));
-	info.exec = "/bin/sh"; /* unused */
 	info.dev_stdin = value;
 	info.dev_stdout = value;
 	info.dev_stderr = value;
@@ -737,7 +731,7 @@ int pidfile_info(char *variable, char *value, void *data)
 	struct process_info_t *info = (struct process_info_t *)data;
 
 	if (!strcmp(variable, "EXEC"))
-		info->exec = value;
+		strncpy(info->exec, value, PATH_MAX);
 	else if (!strcmp(variable, "STDIN"))
 		info->dev_stdin = value;
 	else if (!strcmp(variable, "STDOUT"))
@@ -750,8 +744,6 @@ int pidfile_info(char *variable, char *value, void *data)
 		info->oldstatus = strtol(value, NULL, 0);
 	else if (!strcmp(variable, "OLDPID"))
 		info->oldpid = strtol(value, NULL, 0);
-	else if (!strcmp(variable, "CMDLINE"))
-		strncpy(info->cmdline, value, PATH_MAX);
 
 	return 0;
 }
@@ -797,9 +789,9 @@ int pid_respawn(pid_t pid, int status)
 	/* overwrite values */
 	info.oldstatus = status;
 	info.oldpid = pid;
-	if (info.cmdline) {
+	if (*info.exec) {
 		char *argv[10];
-		if (!strtonargv(argv, info.cmdline, 10)) {
+		if (!strtonargv(argv, info.exec, 10)) {
 			perror("strtonargv");
 			return -1;
 		}
@@ -961,7 +953,6 @@ int main_respawn(int argc, char * const argv[])
 	arg[i] = NULL;
 
 	memset(&info, 0, sizeof(info));
-	info.exec = "/bin/sh"; /* unused */
 	info.dev_stdin = __getenv("STDIN", "null");
 	info.dev_stdout = __getenv("STDOUT", "null");
 	info.dev_stderr = __getenv("STDERR", "null");
