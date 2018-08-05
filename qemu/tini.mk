@@ -33,7 +33,7 @@ LINUX_CONFIGS	+= CONFIG_SYSFS=y
 .PHONY: all
 all:
 
-ramfs/sys ramfs/run:
+ramfs/run:
 	mkdir -p $@
 
 ramfs/lib/tini/uevent/devname/console/sh: sh.tini
@@ -45,7 +45,7 @@ ramfs/lib/tini/uevent/devname/tty%/sh: sh.tini
 initramfs.cpio: ramfs/lib/tini/uevent/devname/console/sh
 initramfs.cpio: ramfs/lib/tini/uevent/devname/tty2/sh ramfs/lib/tini/uevent/devname/tty3/sh ramfs/lib/tini/uevent/devname/tty4/sh
 
-initramfs.cpio: ramfs/sys ramfs/run
+initramfs.cpio: ramfs/run
 initramfs.cpio: ramfs/sbin/tini
 initramfs.cpio: ramfs/sbin/halt ramfs/sbin/poweroff ramfs/sbin/reboot
 initramfs.cpio: ramfs/sbin/spawn ramfs/sbin/respawn ramfs/sbin/assassinate ramfs/sbin/zombize ramfs/sbin/re-exec
