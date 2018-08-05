@@ -36,6 +36,15 @@ all:
 ramfs/sys ramfs/run:
 	mkdir -p $@
 
+ramfs/lib/tini/uevent/devname/console/sh: sh.tini
+	install -D -m 755 $< $@
+
+ramfs/lib/tini/uevent/devname/tty%/sh: sh.tini
+	install -D -m 755 $< $@
+
+initramfs.cpio: ramfs/lib/tini/uevent/devname/console/sh
+initramfs.cpio: ramfs/lib/tini/uevent/devname/tty2/sh ramfs/lib/tini/uevent/devname/tty3/sh ramfs/lib/tini/uevent/devname/tty4/sh
+
 initramfs.cpio: ramfs/sys ramfs/run
 initramfs.cpio: ramfs/sbin/tini
 initramfs.cpio: ramfs/sbin/halt ramfs/sbin/poweroff ramfs/sbin/reboot

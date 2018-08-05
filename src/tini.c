@@ -53,7 +53,6 @@ static int DEBUG = 0;
 #define debug(fmt, ...) if (DEBUG) fprintf(stderr, fmt, ##__VA_ARGS__)
 
 static char *rcS[] = { "/etc/init.d/rcS", "start", NULL };
-static char *sh[] = { "-sh", NULL };
 
 #define __strncmp(s1, s2) strncmp(s1, s2, sizeof(s2) - 1)
 #define __close(fd) do { \
@@ -390,6 +389,26 @@ int parse_arguments(struct options_t *opts, int argc, char * const argv[])
 	return optind;
 }
 
+int uevent_spawn(const char *path, struct dirent *entry, void *data)
+{
+	const char *devname = (const char *)data;
+	char buf[PATH_MAX];
+	int status;
+
+	snprintf(buf, sizeof(buf), "DEVNAME=%s %s/%s %s", devname, path,
+		 entry->d_name, "start");
+	status = system(buf);
+	if (WIFEXITED(status)) {
+		status = WEXITSTATUS(status);
+		verbose("%s/%s: %i\n", path, entry->d_name, status);
+	} else if (WIFSIGNALED(status)) {
+		fprintf(stderr, "%s/%s: %s\n", path, entry->d_name,
+			strsignal(WTERMSIG(status)));
+	}
+
+	return 0;
+}
+
 int uevent_event(char *action, char *devpath, void *data)
 {
 	(void)action;
@@ -401,32 +420,19 @@ int uevent_event(char *action, char *devpath, void *data)
 
 int uevent_variable(char *variable, char *value, void *data)
 {
-	struct process_info_t info;
+	struct stat statbuf;
+	char dir[PATH_MAX];
 
 	(void)data;
 	if (strcmp(variable, "DEVNAME"))
 		return 0;
 
-	memset(&info, 0, sizeof(info));
-	info.dev_stdin = value;
-	info.dev_stdout = value;
-	info.dev_stderr = value;
-	info.oldstatus = -1;
-	info.oldpid = -1;
+	/* DEVNAME */
+	snprintf(dir, sizeof(dir), "/lib/tini/uevent/devname/%s", value);
+	if (stat(dir, &statbuf))
+		return 0;
 
-	/* Spawn shell on tty2, tty3, tty4... */
-	if (!__strncmp(value, "tty")) {
-		if ((value[3] >= '2') && (value[3] <= '4') && (!value[4])) {
-			debug("Respawning /bin/sh (%s)\n", info.dev_stdout);
-			respawn("/bin/sh", sh, &info);
-		}
-	/* ... and on console */
-	} else if (!strcmp(value, "console")) {
-		debug("Spawning /bin/sh (%s)\n", info.dev_stdout);
-		respawn("/bin/sh", sh, &info);
-	}
-
-	return 0;
+	return dir_parse(dir, uevent_spawn, value);
 }
 
 int uevent_parse_line(char *line,
