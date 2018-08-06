@@ -95,7 +95,7 @@ int variable_parse_line(char *line, variable_cb_t *callback, void *data);
 typedef int directory_cb_t(const char *, struct dirent *, void *);
 int dir_parse(const char *path, directory_cb_t *callback, void *data);
 
-struct process_info_t {
+struct proc {
 	char exec[PATH_MAX];
 	const char *dev_stdin;
 	const char *dev_stdout;
@@ -106,7 +106,7 @@ struct process_info_t {
 };
 
 int spawn(const char *path, char * const argv[], const char *devname);
-int respawn(const char *path, char * const argv[], struct process_info_t *info);
+int respawn(const char *path, char * const argv[], struct proc *proc);
 
 struct options_t {
 	int argc;
@@ -244,7 +244,7 @@ int spawn(const char *path, char * const argv[], const char *devname)
 	_exit(127);
 }
 
-int respawn(const char *path, char * const argv[], struct process_info_t *info)
+int respawn(const char *path, char * const argv[], struct proc *proc)
 {
 	char pidfile[PATH_MAX];
 	FILE *f;
@@ -270,13 +270,13 @@ int respawn(const char *path, char * const argv[], struct process_info_t *info)
 			fprintf(stderr, "%s\n", strsignal(WTERMSIG(status)));
 
 		if (status == 0)
-			info->counter++;
+			proc->counter++;
 
 		return status;
 	}
 
 	netlink_close(nl_fd);
-	info->counter++;
+	proc->counter++;
 
 	/* Child */
 	pid = fork();
@@ -301,14 +301,14 @@ int respawn(const char *path, char * const argv[], struct process_info_t *info)
 			fprintf(f, "%s%c", *arg++, CFS[0]);
 		fprintf(f, "\n");
 
-		fprintf(f, "STDIN=%s\n", info->dev_stdin);
-		fprintf(f, "STDOUT=%s\n", info->dev_stdout);
-		fprintf(f, "STDERR=%s\n", info->dev_stderr);
-		fprintf(f, "COUNTER=%i\n", info->counter);
-		if (info->oldstatus != -1)
-			fprintf(f, "OLDSTATUS=%i\n", info->oldstatus);
-		if (info->oldpid != -1)
-			fprintf(f, "OLDPID=%i\n", info->oldpid);
+		fprintf(f, "STDIN=%s\n", proc->dev_stdin);
+		fprintf(f, "STDOUT=%s\n", proc->dev_stdout);
+		fprintf(f, "STDERR=%s\n", proc->dev_stderr);
+		fprintf(f, "COUNTER=%i\n", proc->counter);
+		if (proc->oldstatus != -1)
+			fprintf(f, "OLDSTATUS=%i\n", proc->oldstatus);
+		if (proc->oldpid != -1)
+			fprintf(f, "OLDPID=%i\n", proc->oldpid);
 		arg = argv;
 
 		fclose(f);
@@ -320,11 +320,11 @@ int respawn(const char *path, char * const argv[], struct process_info_t *info)
 		perror("chdir");
 
 	close(STDIN_FILENO);
-	if (open(info->dev_stdin, O_RDONLY|O_NOCTTY) == -1)
+	if (open(proc->dev_stdin, O_RDONLY|O_NOCTTY) == -1)
 		perror("open");
 
 	close(STDOUT_FILENO);
-	if (open(info->dev_stdout, O_WRONLY|O_NOCTTY) == -1)
+	if (open(proc->dev_stdout, O_WRONLY|O_NOCTTY) == -1)
 		perror("open");
 
 	close(STDERR_FILENO);
@@ -679,22 +679,22 @@ ssize_t variable_read(int fd, variable_cb_t cb, void *data)
 
 int pidfile_info(char *variable, char *value, void *data)
 {
-	struct process_info_t *info = (struct process_info_t *)data;
+	struct proc *proc = (struct proc *)data;
 
 	if (!strcmp(variable, "EXEC"))
-		strncpy(info->exec, value, PATH_MAX);
+		strncpy(proc->exec, value, PATH_MAX);
 	else if (!strcmp(variable, "STDIN"))
-		info->dev_stdin = value;
+		proc->dev_stdin = value;
 	else if (!strcmp(variable, "STDOUT"))
-		info->dev_stdout = value;
+		proc->dev_stdout = value;
 	else if (!strcmp(variable, "STDERR"))
-		info->dev_stderr = value;
+		proc->dev_stderr = value;
 	else if (!strcmp(variable, "COUNTER"))
-		info->counter = strtol(value, NULL, 0);
+		proc->counter = strtol(value, NULL, 0);
 	else if (!strcmp(variable, "OLDSTATUS"))
-		info->oldstatus = strtol(value, NULL, 0);
+		proc->oldstatus = strtol(value, NULL, 0);
 	else if (!strcmp(variable, "OLDPID"))
-		info->oldpid = strtol(value, NULL, 0);
+		proc->oldpid = strtol(value, NULL, 0);
 
 	return 0;
 }
@@ -719,7 +719,7 @@ int pidfile_parse(const char *pidfile, variable_cb_t *callback, void *data)
 
 int pid_respawn(pid_t pid, int status)
 {
-	struct process_info_t info;
+	struct proc proc;
 	char pidfile[PATH_MAX];
 	struct stat statbuf;
 	int ret;
@@ -732,26 +732,26 @@ int pid_respawn(pid_t pid, int status)
 	if (stat(pidfile, &statbuf))
 		return 1;
 
-	memset(&info, 0, sizeof(info));
-	info.oldstatus = -1;
-	info.oldpid = -1;
-	ret = pidfile_parse(pidfile, pidfile_info, &info);
+	memset(&proc, 0, sizeof(proc));
+	proc.oldstatus = -1;
+	proc.oldpid = -1;
+	ret = pidfile_parse(pidfile, pidfile_info, &proc);
 
 	/* overwrite values */
-	info.oldstatus = status;
-	info.oldpid = pid;
-	if (*info.exec) {
+	proc.oldstatus = status;
+	proc.oldpid = pid;
+	if (*proc.exec) {
 		int argc = 127;
 
-		strtonargv(NULL, info.exec, &argc);
+		strtonargv(NULL, proc.exec, &argc);
 		if (argc > 0) {
 			char *argv[argc];
-			if (!strtonargv(argv, info.exec, &argc)) {
+			if (!strtonargv(argv, proc.exec, &argc)) {
 				perror("strtonargv");
 				return -1;
 			}
 
-			ret = respawn(argv[0], &argv[1], &info);
+			ret = respawn(argv[0], &argv[1], &proc);
 		}
 	}
 	if (unlink(pidfile) == -1)
@@ -811,18 +811,18 @@ char **strtonargv(char *dest[], char *src, int *n)
 
 int pidfile_assassinate(const char *path, struct dirent *entry, void *data)
 {
-	struct process_info_t info;
+	struct proc proc;
 	char pidfile[BUFSIZ];
 	pid_t pid;
 
 	snprintf(pidfile, sizeof(pidfile), "%s/%s", path, entry->d_name);
 
-	memset(&info, 0, sizeof(info));
-	info.oldstatus = -1;
-	info.oldpid = -1;
-	pidfile_parse(pidfile, pidfile_info, &info);
+	memset(&proc, 0, sizeof(proc));
+	proc.oldstatus = -1;
+	proc.oldpid = -1;
+	pidfile_parse(pidfile, pidfile_info, &proc);
 
-	if (!strcmp(info.exec, (const char *)data)) {
+	if (!strcmp(proc.exec, (const char *)data)) {
 		if (unlink(pidfile) == -1)
 			perror("unlink");
 
@@ -899,7 +899,7 @@ int main_spawn(int argc, char * const argv[])
 
 int main_respawn(int argc, char * const argv[])
 {
-	struct process_info_t info;
+	struct proc proc;
 	char **arg = (char **)argv;
 	int i;
 
@@ -915,15 +915,15 @@ int main_respawn(int argc, char * const argv[])
 		arg[i] = arg[i+1];
 	arg[i] = NULL;
 
-	memset(&info, 0, sizeof(info));
-	info.dev_stdin = __getenv("STDIN", "null");
-	info.dev_stdout = __getenv("STDOUT", "null");
-	info.dev_stderr = __getenv("STDERR", "null");
-	info.counter = strtol(__getenv("COUNTER", "0"), NULL, 0);
-	info.oldstatus = strtol(__getenv("OLDSTATUS", "-1"), NULL, 0);
-	info.oldpid = strtol(__getenv("OLDPID", "-1"), NULL, 0);
+	memset(&proc, 0, sizeof(proc));
+	proc.dev_stdin = __getenv("STDIN", "null");
+	proc.dev_stdout = __getenv("STDOUT", "null");
+	proc.dev_stderr = __getenv("STDERR", "null");
+	proc.counter = strtol(__getenv("COUNTER", "0"), NULL, 0);
+	proc.oldstatus = strtol(__getenv("OLDSTATUS", "-1"), NULL, 0);
+	proc.oldpid = strtol(__getenv("OLDPID", "-1"), NULL, 0);
 
-	return respawn(argv[0], argv, &info);
+	return respawn(argv[0], argv, &proc);
 }
 
 int main_assassinate(int argc, char * const argv[])
