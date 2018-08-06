@@ -443,6 +443,7 @@ int uevent_parse_line(char *line,
 		      void *data)
 {
 	char *at, *equal;
+	int ret = 0;
 
 	/* empty line? */
 	if (*line == '\0')
@@ -457,10 +458,11 @@ int uevent_parse_line(char *line,
 		devpath = at + 1;
 		*at = '\0';
 
-		if (!evt_cb)
-			return 0;
+		if (evt_cb)
+			ret = evt_cb(action, devpath, data);
 
-		return evt_cb(action, devpath, data);
+		*at = '@';
+		return ret;
 	}
 
 	/* variable? */
@@ -472,10 +474,11 @@ int uevent_parse_line(char *line,
 		value = equal + 1;
 		*equal = '\0';
 
-		if (!var_cb)
-			return 0;
+		if (var_cb)
+			ret = var_cb(variable, value, data);
 
-		return var_cb(variable, value, data);
+		*equal = '=';
+		return ret;
 	}
 
 	fprintf(stderr, "malformated event or variable: \"%s\"."
