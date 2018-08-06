@@ -33,6 +33,11 @@ LINUX_CONFIGS	+= CONFIG_SYSFS=y
 .PHONY: all
 all:
 
+ramfs/lib/tini/uevent/script: uevent.sh
+	install -D -m 755 $< $@
+
+initramfs.cpio: ramfs/lib/tini/uevent/script
+
 ramfs/run:
 	mkdir -p $@
 

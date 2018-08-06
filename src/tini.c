@@ -423,19 +423,10 @@ int uevent_event(char *action, char *devpath, void *data)
 int uevent_variable(char *variable, char *value, void *data)
 {
 	char **env = (char **)data;
-	struct stat statbuf;
-	char dir[PATH_MAX];
+	(void)value;
 
 	*env = variable;
-	if (strcmp(variable, "DEVNAME"))
-		return 0;
-
-	/* DEVNAME */
-	snprintf(dir, sizeof(dir), "/lib/tini/uevent/devname/%s", value);
-	if (stat(dir, &statbuf))
-		return 0;
-
-	return dir_parse(dir, uevent_spawn, value);
+	return 0;
 }
 
 int uevent_parse_line(char *line,
@@ -614,6 +605,11 @@ ssize_t netlink_recv(int fd, struct sockaddr_nl *addr)
 		s += strlen(s) + 1;
 
 		if (nenvp) {
+			char * const argv[] = {
+				"/lib/tini/uevent/script",
+				buf,
+				NULL
+			};
 			char *envp[nenvp+1]; /* NULL terminated */
 			char **env = envp;
 
@@ -632,6 +628,9 @@ ssize_t netlink_recv(int fd, struct sockaddr_nl *addr)
 
 			*env = NULL;
 			len += l;
+
+			if (spawn(argv[0], argv, envp, NULL) == -1)
+				perror("spawn");
 		}
 	}
 
