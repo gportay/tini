@@ -105,7 +105,8 @@ struct proc {
 	pid_t oldpid;
 };
 
-int spawn(const char *path, char * const argv[], const char *devname);
+int spawn(const char *path, char * const argv[], char * const envp[],
+	  const char *devname);
 int respawn(const char *path, char * const argv[], struct proc *proc);
 
 struct options_t {
@@ -180,7 +181,8 @@ int zombize(const char *path, char * const argv[], const char *devname)
 	_exit(127);
 }
 
-int spawn(const char *path, char * const argv[], const char *devname)
+int spawn(const char *path, char * const argv[], char * const envp[],
+	  const char *devname)
 {
 	pid_t pid = fork();
 	if (pid == -1) {
@@ -240,7 +242,7 @@ int spawn(const char *path, char * const argv[], const char *devname)
 			perror("chdir");
 	}
 
-	execv(path, argv);
+	execvpe(path, argv, envp);
 	_exit(127);
 }
 
@@ -894,7 +896,7 @@ int main_spawn(int argc, char * const argv[])
 		arg[i] = arg[i+1];
 	arg[i] = NULL;
 
-	return spawn(argv[0], argv, NULL);
+	return spawn(argv[0], argv, environ, NULL);
 }
 
 int main_respawn(int argc, char * const argv[])
@@ -1088,7 +1090,7 @@ int main_tini(int argc, char * const argv[])
 
 	printf("tini started!\n");
 
-	spawn("/etc/init.d/rcS", rcS, NULL);
+	spawn("/etc/init.d/rcS", rcS, environ, NULL);
 
 	for (;;) {
 		siginfo_t siginfo;
