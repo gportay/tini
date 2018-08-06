@@ -422,10 +422,11 @@ int uevent_event(char *action, char *devpath, void *data)
 
 int uevent_variable(char *variable, char *value, void *data)
 {
+	char **env = (char **)data;
 	struct stat statbuf;
 	char dir[PATH_MAX];
 
-	(void)data;
+	*env = variable;
 	if (strcmp(variable, "DEVNAME"))
 		return 0;
 
@@ -581,6 +582,7 @@ ssize_t netlink_recv(int fd, struct sockaddr_nl *addr)
 	ssize_t len = 0;
 
 	for (;;) {
+		int nenvp = 0;
 		char *n, *s;
 		ssize_t l;
 
@@ -598,21 +600,39 @@ ssize_t netlink_recv(int fd, struct sockaddr_nl *addr)
 
 		buf[l] = 0;
 		s = buf;
-		s += strlen(s) + 1;
 
 		for (;;) {
 			n = strchr(s, '\0');
 			if (!n || n == s)
 				break;
 
-			if (uevent_parse_line(s, uevent_event, uevent_variable,
-					      NULL))
-				break;
-
+			nenvp++;
 			s = n + 1;
 		}
 
-		len += l;
+		s = buf;
+		s += strlen(s) + 1;
+
+		if (nenvp) {
+			char *envp[nenvp+1]; /* NULL terminated */
+			char **env = envp;
+
+			for (;;) {
+				n = strchr(s, '\0');
+				if (!n || n == s)
+					break;
+
+				if (uevent_parse_line(s, uevent_event,
+						      uevent_variable, env))
+					break;
+
+				env++;
+				s = n + 1;
+			}
+
+			*env = NULL;
+			len += l;
+		}
 	}
 
 	return len;
