@@ -903,7 +903,8 @@ int main_kill(int signum)
 
 int main_spawn(int argc, char * const argv[])
 {
-	char **arg = (char **)argv;
+	const char **arg = (const char **)argv;
+	const char *path;
 	int i;
 
 	if (argc < 2) {
@@ -918,13 +919,19 @@ int main_spawn(int argc, char * const argv[])
 		arg[i] = arg[i+1];
 	arg[i] = NULL;
 
-	return spawn(argv[0], argv, environ, NULL);
+	path = argv[0];
+	/* The first argument, by convention, should point to the filename
+	 * associated with the file being executed. */
+	arg[0] = __getenv("ARGV0", path);
+
+	return spawn(path, argv, environ, NULL);
 }
 
 int main_respawn(int argc, char * const argv[])
 {
 	struct proc proc;
-	char **arg = (char **)argv;
+	const char **arg = (const char **)argv;
+	const char *path;
 	int i;
 
 	if (argc < 2) {
@@ -947,7 +954,12 @@ int main_respawn(int argc, char * const argv[])
 	proc.oldstatus = strtol(__getenv("OLDSTATUS", "-1"), NULL, 0);
 	proc.oldpid = strtol(__getenv("OLDPID", "-1"), NULL, 0);
 
-	return respawn(argv[0], argv, &proc);
+	path = argv[0];
+	/* The first argument, by convention, should point to the filename
+	 * associated with the file being executed. */
+	arg[0] = __getenv("ARGV0", path);
+
+	return respawn(path, argv, &proc);
 }
 
 int main_assassinate(int argc, char * const argv[])
@@ -975,7 +987,8 @@ int main_assassinate(int argc, char * const argv[])
 
 int main_zombize(int argc, char * const argv[])
 {
-	char **arg = (char **)argv;
+	const char **arg = (const char **)argv;
+	const char *path;
 	int i;
 
 	if (argc < 2) {
@@ -989,6 +1002,11 @@ int main_zombize(int argc, char * const argv[])
 	for (i = 0; i < (argc - 1); i++)
 		arg[i] = arg[i+1];
 	arg[i] = NULL;
+
+	path = argv[0];
+	/* The first argument, by convention, should point to the filename
+	 * associated with the file being executed. */
+	arg[0] = __getenv("ARGV0", path);
 
 	return zombize(argv[0], argv, NULL);
 }

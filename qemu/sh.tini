@@ -22,4 +22,5 @@
 STDIN="$DEVNAME" \
 STDOUT="$DEVNAME" \
 STDERR="$DEVNAME" \
+ARGV0="-sh" \
 respawn /bin/sh
