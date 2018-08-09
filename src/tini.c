@@ -62,6 +62,13 @@ static char *rcS[] = { "/etc/init.d/rcS", "start", NULL };
 	errno = __error; \
 } while(0)
 
+#define __unsetenv(name) do { \
+	int __error = errno; \
+	if (unsetenv(name) == -1) \
+		perror("unsetenv"); \
+	errno = __error; \
+} while(0)
+
 static inline const char *__getenv(const char *name, const char *undef) {
 	const char *env = getenv(name);
 	if (!env)
@@ -924,6 +931,7 @@ int main_spawn(int argc, char * const argv[])
 	 * associated with the file being executed. */
 	arg[0] = __getenv("ARGV0", path);
 
+	__unsetenv("ARGV0");
 	return spawn(path, argv, environ, NULL);
 }
 
@@ -959,6 +967,13 @@ int main_respawn(int argc, char * const argv[])
 	 * associated with the file being executed. */
 	arg[0] = __getenv("ARGV0", path);
 
+	__unsetenv("ARGV0");
+	__unsetenv("STDIN");
+	__unsetenv("STDOUT");
+	__unsetenv("STDERR");
+	__unsetenv("COUNTER");
+	__unsetenv("OLDSTATUS");
+	__unsetenv("OLDPID");
 	return respawn(path, argv, &proc);
 }
 
@@ -1008,6 +1023,7 @@ int main_zombize(int argc, char * const argv[])
 	 * associated with the file being executed. */
 	arg[0] = __getenv("ARGV0", path);
 
+	__unsetenv("ARGV0");
 	return zombize(argv[0], argv, NULL);
 }
 
