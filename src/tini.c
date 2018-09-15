@@ -109,6 +109,7 @@ struct proc {
 	const char *dev_stderr;
 	int counter;
 	int oldstatus;
+	pid_t pid;
 	pid_t oldpid;
 };
 
@@ -256,17 +257,34 @@ int spawn(const char *path, char * const argv[], char * const envp[],
 int respawn(const char *path, char * const argv[], struct proc *proc)
 {
 	char pidfile[PATH_MAX];
+	pid_t pid;
+	ssize_t s;
+	int fd[2];
 	FILE *f;
 
-	pid_t pid = fork();
+	if (pipe(fd) == -1) {
+		perror("pipe");
+		return -1;
+	}
+
+	pid = fork();
 	if (pid == -1) {
 		perror("fork");
+		__close(fd[0]);
+		__close(fd[1]);
 		return -1;
 	}
 
 	/* Parent */
 	if (pid) {
 		int status;
+
+		__close(fd[1]);
+		s = read(fd[0], &proc->pid, sizeof(proc->pid));
+		if (s == -1) {
+			perror("read");
+			proc->pid = -1;
+		}
 
 		if (waitpid(pid, &status, 0) == -1) {
 			perror("waitpid");
@@ -284,6 +302,7 @@ int respawn(const char *path, char * const argv[], struct proc *proc)
 		return status;
 	}
 
+	__close(fd[0]);
 	netlink_close(nl_fd);
 	proc->counter++;
 
@@ -291,10 +310,18 @@ int respawn(const char *path, char * const argv[], struct proc *proc)
 	pid = fork();
 	if (pid == -1) {
 		perror("fork");
+		__close(fd[1]);
 		exit(EXIT_FAILURE);
 	} else if (pid) {
+		s = write(fd[1], &pid, pid);
+		if (s == -1)
+			perror("write");
+
+		__close(fd[1]);
 		exit(EXIT_SUCCESS);
 	}
+
+	__close(fd[1]);
 
 	/*
 	 * TODO: check for fprintf returned values
@@ -765,6 +792,7 @@ int pid_respawn(pid_t pid, int status)
 
 	memset(&proc, 0, sizeof(proc));
 	proc.oldstatus = -1;
+	proc.pid = -1;
 	proc.oldpid = -1;
 	ret = pidfile_parse(pidfile, pidfile_info, &proc);
 
@@ -850,6 +878,7 @@ int pidfile_assassinate(const char *path, struct dirent *entry, void *data)
 
 	memset(&proc, 0, sizeof(proc));
 	proc.oldstatus = -1;
+	proc.pid = -1;
 	proc.oldpid = -1;
 	pidfile_parse(pidfile, pidfile_info, &proc);
 
@@ -960,6 +989,7 @@ int main_respawn(int argc, char * const argv[])
 	proc.dev_stderr = __getenv("STDERR", "null");
 	proc.counter = strtol(__getenv("COUNTER", "0"), NULL, 0);
 	proc.oldstatus = strtol(__getenv("OLDSTATUS", "-1"), NULL, 0);
+	proc.pid = -1;
 	proc.oldpid = strtol(__getenv("OLDPID", "-1"), NULL, 0);
 
 	path = argv[0];
@@ -974,7 +1004,11 @@ int main_respawn(int argc, char * const argv[])
 	__unsetenv("COUNTER");
 	__unsetenv("OLDSTATUS");
 	__unsetenv("OLDPID");
-	return respawn(path, argv, &proc);
+	if (respawn(path, argv, &proc))
+		return EXIT_FAILURE;
+
+	printf("%i\n", proc.pid);
+	return EXIT_SUCCESS;
 }
 
 int main_assassinate(int argc, char * const argv[])

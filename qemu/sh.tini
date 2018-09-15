@@ -19,8 +19,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+mkdir -p "/run/tini/pid/sh/"
+
 STDIN="$DEVNAME" \
 STDOUT="$DEVNAME" \
 STDERR="$DEVNAME" \
 ARGV0="-sh" \
-respawn /bin/sh
+respawn /bin/sh >"/run/tini/pid/sh/$DEVNAME"
