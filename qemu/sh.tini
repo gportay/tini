@@ -19,6 +19,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+if [ -z "$DEVNAME" ]
+then
+	echo "Error: \$DEVNAME: Invalid variable!" >&2
+	exit 1
+fi
+
 mkdir -p "/run/tini/pid/sh/"
 
 STDIN="$DEVNAME" \
