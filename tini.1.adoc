@@ -56,7 +56,7 @@ on _console_, _tty2_, _tty3_ and _tty4_.
 
 == BUGS
 
-Report bugs at *https://github.com/gazoo74/tini/issues*
+Report bugs at *https://github.com/gportay/tini/issues*
 
 == AUTHOR
 

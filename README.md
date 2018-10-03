@@ -47,7 +47,7 @@ Here is a quick example to try [tini(1)] on host using [qemu(1)]
 
 ## BUGS
 
-Report bugs at *https://github.com/gazoo74/tini/issues*
+Report bugs at *https://github.com/gportay/tini/issues*
 
 ## AUTHOR
 
