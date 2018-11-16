@@ -875,12 +875,12 @@ int pid_respawn(pid_t pid, int status)
 	return ret;
 }
 
-char *strargv(char *buf, size_t bufsize, char * const argv[])
+char *strargv(char *buf, size_t bufsize, const char *path, char * const argv[])
 {
 	char * const *arg = argv;
 	ssize_t size = 0;
 
-	size = snprintf(&buf[size], size - bufsize, "%s", *arg++);
+	size = snprintf(&buf[size], size - bufsize, "%s %s", path, *arg++);
 	while (*arg)
 		size += snprintf(&buf[size], size - bufsize, " %s", *arg++);
 
@@ -1100,6 +1100,7 @@ int main_respawn(int argc, char * const argv[])
 int main_assassinate(int argc, char * const argv[])
 {
 	char **arg = (char **)argv;
+	const char *arg0, *path;
 	char execline[BUFSIZ];
 	pid_t pid = -1;
 	int i;
@@ -1118,7 +1119,14 @@ int main_assassinate(int argc, char * const argv[])
 		arg[i] = arg[i+1];
 	arg[i] = NULL;
 
-	strargv(execline, sizeof(execline), arg);
+	path = argv[0];
+	/* The first argument, by convention, should point to the filename
+	 * associated with the file being executed. */
+	arg0 = getenv("ARGV0");
+	if (arg0)
+		*arg = (char *)arg0;
+
+	strargv(execline, sizeof(execline), path, arg);
 
 	return dir_parse("/run/tini", pidfile_assassinate, execline);
 }
