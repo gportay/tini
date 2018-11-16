@@ -1,8 +1,6 @@
 #
-#  Copyright (C) 2017-2018 Savoir-Faire Linux Inc.
-#
-#  Authors:
-#      Gaël PORTAY <gael.portay@savoirfairelinux.com>
+#  Copyright (C)      2018 Gaël PORTAY
+#                2017-2018 Savoir-Faire Linux Inc.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -64,7 +62,6 @@ initramfs.cpio.gz:
 initramfs.cpio: | ramfs/proc ramfs/sys
 initramfs.cpio: ramfs/bin/busybox ramfs/dev/console
 
-include init.mk
 include tini.mk
 include tests.mk
 
