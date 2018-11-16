@@ -95,6 +95,30 @@ static inline pid_t strtopid(const char *nptr)
 	return pid;
 }
 
+static inline pid_t readpid(int fd)
+{
+	char buf[BUFSIZ];
+	ssize_t size;
+
+	for (;;) {
+		size = read(fd, buf, sizeof(buf));
+		if (size == -1) {
+			perror("read");
+			break;
+		} else if (!size) {
+			break;
+		}
+		buf[size] = 0;
+
+		if (buf[size-1] == '\n')
+			buf[size-1] = 0;
+
+		return strtopid(buf);
+	}
+
+	return -1;
+}
+
 static char *CFS = " \t\n"; /* Command-line Field Separator */
 char **strtonargv(char *dest[], char *src, int *n);
 
@@ -1077,17 +1101,15 @@ int main_assassinate(int argc, char * const argv[])
 {
 	char **arg = (char **)argv;
 	char execline[BUFSIZ];
-	pid_t pid;
+	pid_t pid = -1;
 	int i;
 
-	if (argc < 2) {
-		fprintf(stderr, "Usage: %s PID | PATH [ARGV...]\n\n"
-				"Error: Too few arguments!\n", argv[0]);
-		return EXIT_FAILURE;
-	}
+	if (argc == 1)
+		pid = readpid(STDIN_FILENO);
+	else if (argc == 2)
+		pid = strtopid(argv[1]);
 
-	pid = strtopid(argv[1]);
-	if (argc == 2 && pid != -1)
+	if (pid != -1)
 		return dir_parse("/run/tini", pidfile_assassinate_by_pid, &pid);
 
 	/* Shift arguments to remove first argument (path), and append a NULL
