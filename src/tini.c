@@ -120,6 +120,7 @@ static inline pid_t readpid(int fd)
 }
 
 static char *CFS = " \t\n"; /* Command-line Field Separator */
+char *strargv(char *buf, size_t bufsize, const char *path, char * const argv[]);
 char **strtonargv(char *dest[], char *src, int *n);
 
 #ifndef UEVENT_BUFFER_SIZE
@@ -373,13 +374,9 @@ int respawn(const char *path, char * const argv[], struct proc *proc)
 	snprintf(pidfile, sizeof(pidfile), "/run/tini/%i", getpid());
 	f = fopen(pidfile, "w");
 	if (f) {
-		char * const *arg = argv;
+		strargv(proc->exec, sizeof(proc->exec), path, argv);
 
-		fprintf(f, "EXEC=%s", path);
-		while (*arg)
-			fprintf(f, "%c%s", CFS[0], *arg++);
-		fprintf(f, "\n");
-
+		fprintf(f, "EXEC=%s\n", proc->exec);
 		fprintf(f, "STDIN=%s\n", proc->dev_stdin);
 		fprintf(f, "STDOUT=%s\n", proc->dev_stdout);
 		fprintf(f, "STDERR=%s\n", proc->dev_stderr);
@@ -389,7 +386,6 @@ int respawn(const char *path, char * const argv[], struct proc *proc)
 			fprintf(f, "OLDSTATUS=%i\n", proc->oldstatus);
 		if (proc->oldpid != -1)
 			fprintf(f, "OLDPID=%i\n", proc->oldpid);
-		arg = argv;
 
 		fclose(f);
 		f = NULL;
