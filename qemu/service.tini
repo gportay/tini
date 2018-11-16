@@ -1,0 +1,87 @@
+#!/bin/sh
+#
+#  Copyright (C) 2018 Gaël PORTAY
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 2.1 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+set -e
+
+# Must be called with two arguments!
+# The script to source and the action.
+if [ $# -lt 2 ] || ! [ -e "$1" ]
+then
+	cat <<EOF
+Usage: $0 SCRIPT start|stop [ARGS...]
+EOF
+	exit 1
+fi >&2
+
+__script="$1"
+shift
+__action="$1"
+shift
+
+PIDFILE="/run/tini/pid/${__script##*/}"
+
+start() {
+	mkdir -p "${PIDFILE%/*}"
+	/sbin/respawn "$@" >"$PIDFILE"
+}
+
+stop() {
+	/sbin/assassinate "$@" <"$PIDFILE"
+	rm -f "$PIDFILE"
+}
+
+. "$__script"
+
+# If EXEC is unset, guess the executable from script name.
+if [ -z "$EXEC" ]
+then
+	EXEC="$(command -v "${__script##*/}")"
+fi
+
+# If ARGS is set, replace all arguments.
+if [ -n "$ARGS" ]
+then
+	set -f
+	set -- $ARGS
+	set +f
+fi
+
+case "$__action" in
+start)
+	echo -n "starting ${__script##*/}: " >&2
+	if start "$EXEC" "$@"
+	then
+		echo "done" >&2
+	else
+		echo "failed (with rc $?)" >&2
+	fi
+	;;
+stop)
+	echo -n "stopping ${__script##*/}: " >&2
+	if stop
+	then
+		echo "done" >&2
+	else
+		echo "failed (with rc $?)" >&2
+	fi
+	;;
+*)
+	echo "Usage: ${__script##*/} start|stop [ARGS...]" >&2
+	exit 1
+	;;
+esac
