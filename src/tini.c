@@ -375,9 +375,9 @@ int respawn(const char *path, char * const argv[], struct proc *proc)
 	if (f) {
 		char * const *arg = argv;
 
-		fprintf(f, "EXEC=%s%c", path, CFS[0]);
+		fprintf(f, "EXEC=%s", path);
 		while (*arg)
-			fprintf(f, "%s%c", *arg++, CFS[0]);
+			fprintf(f, "%c%s", CFS[0], *arg++);
 		fprintf(f, "\n");
 
 		fprintf(f, "STDIN=%s\n", proc->dev_stdin);
