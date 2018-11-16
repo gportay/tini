@@ -23,6 +23,11 @@ if [ -z "$DEVNAME" ]
 then
 	echo "Error: \$DEVNAME: Invalid variable!" >&2
 	exit 1
+elif [ "$1" = "stop" ]
+then
+	assassinate <"/run/tini/pid/sh/$DEVNAME"
+	rm -f "/run/tini/pid/sh/$DEVNAME"
+	exit
 fi
 
 mkdir -p "/run/tini/pid/sh/"
