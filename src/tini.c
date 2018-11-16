@@ -852,12 +852,14 @@ int pid_respawn(pid_t pid, int status)
 	proc.oldstatus = status;
 	proc.oldpid = pid;
 	if (*proc.exec) {
+		char exec[BUFSIZ];
 		int argc = 127;
 
-		strtonargv(NULL, proc.exec, &argc);
+		strncpy(exec, proc.exec, sizeof(exec));
+		strtonargv(NULL, exec, &argc);
 		if (argc > 0) {
 			char *argv[argc];
-			if (!strtonargv(argv, proc.exec, &argc)) {
+			if (!strtonargv(argv, exec, &argc)) {
 				perror("strtonargv");
 				return -1;
 			}
