@@ -321,6 +321,7 @@ int respawn(const char *path, char * const argv[], struct proc *proc)
 	}
 
 	__close(fd[1]);
+	proc->pid = getpid();
 
 	/*
 	 * TODO: check for fprintf returned values
@@ -339,6 +340,7 @@ int respawn(const char *path, char * const argv[], struct proc *proc)
 		fprintf(f, "STDIN=%s\n", proc->dev_stdin);
 		fprintf(f, "STDOUT=%s\n", proc->dev_stdout);
 		fprintf(f, "STDERR=%s\n", proc->dev_stderr);
+		fprintf(f, "PID=%i\n", proc->pid);
 		fprintf(f, "COUNTER=%i\n", proc->counter);
 		if (proc->oldstatus != -1)
 			fprintf(f, "OLDSTATUS=%i\n", proc->oldstatus);
@@ -746,6 +748,8 @@ int pidfile_info(char *variable, char *value, void *data)
 		proc->dev_stdout = value;
 	else if (!strcmp(variable, "STDERR"))
 		proc->dev_stderr = value;
+	else if (!strcmp(variable, "PID"))
+		proc->pid = strtol(value, NULL, 0);
 	else if (!strcmp(variable, "COUNTER"))
 		proc->counter = strtol(value, NULL, 0);
 	else if (!strcmp(variable, "OLDSTATUS"))
@@ -881,7 +885,6 @@ int pidfile_assassinate(const char *path, struct dirent *entry, void *data)
 {
 	struct proc proc;
 	char pidfile[BUFSIZ];
-	pid_t pid;
 
 	snprintf(pidfile, sizeof(pidfile), "%s/%s", path, entry->d_name);
 
@@ -895,11 +898,10 @@ int pidfile_assassinate(const char *path, struct dirent *entry, void *data)
 		if (unlink(pidfile) == -1)
 			perror("unlink");
 
-		pid = strtol(entry->d_name, NULL, 0);
-		if (kill(pid, SIGKILL) == -1)
+		if (kill(proc.pid, SIGKILL) == -1)
 			perror("kill");
 
-		verbose("pid %i assassinated\n", pid);
+		verbose("pid %i assassinated\n", proc.pid);
 	}
 
 	return 0;
