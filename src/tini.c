@@ -1,8 +1,6 @@
 /*
- *  Copyright (C) 2017-2018 Savoir-Faire Linux Inc.
- *
- *  Authors:
- *       Gaël PORTAY <gael.portay@savoirfairelinux.com>
+ *  Copyright (C)      2018 Gaël PORTAY
+ *                2017-2018 Savoir-Faire Linux Inc.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -69,7 +67,8 @@ static char *rcS[] = { "/etc/init.d/rcS", "start", NULL };
 	errno = __error; \
 } while(0)
 
-static inline const char *__getenv(const char *name, const char *undef) {
+static inline const char *__getenv(const char *name, const char *undef)
+{
 	const char *env = getenv(name);
 	if (!env)
 		env = undef;
@@ -1181,7 +1180,7 @@ int main_tini(int argc, char * const argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	if (mkdir("/run/tini", DEFFILEMODE)  == -1)
+	if (mkdir("/run/tini", DEFFILEMODE) == -1)
 		perror("mkdir");
 
 	fd = netlink_open(&addr, SIGIO);
