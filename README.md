@@ -10,8 +10,8 @@ Simple init daemon that spawns processes and reaps zombies
 
 [tini(1)] is a damn small process spawner and zombie reaper.
 
-It runs [/etc/init.d/rcS] _init script_ and then spawns four _askfirst_ *sh(1)*
-on _console_, _tty2_, _tty3_ and _tty4_.
+It runs [/lib/tini/scripts/rcS] _init script_ and then spawns four _askfirst_
+*sh(1)* on _console_, _tty2_, _tty3_ and _tty4_.
 
 ## DOCUMENTATION
 
@@ -73,4 +73,4 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 [tini(1)]: tini.1.adoc
 [asciidoctor(1)]: https://asciidoctor.org/man/asciidoctor/
 [qemu(1)]: https://github.com/qemu/qemu
-[/etc/init.d/rcS]: qemu/rcS
+[/lib/tini/scripts/rcS]: qemu/rcS

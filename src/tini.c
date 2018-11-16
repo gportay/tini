@@ -50,7 +50,7 @@ static int DEBUG = 0;
 #define verbose(fmt, ...) if (VERBOSE) fprintf(stderr, fmt, ##__VA_ARGS__)
 #define debug(fmt, ...) if (DEBUG) fprintf(stderr, fmt, ##__VA_ARGS__)
 
-static char *rcS[] = { "/etc/init.d/rcS", "start", NULL };
+static char *rcS[] = { "/etc/tini/scripts/rcS", "start", NULL };
 
 #define __strncmp(s1, s2) strncmp(s1, s2, sizeof(s2) - 1)
 #define __close(fd) do { \
@@ -1281,7 +1281,7 @@ int main_tini(int argc, char * const argv[])
 
 	printf("tini started!\n");
 
-	spawn("/etc/init.d/rcS", rcS, environ, NULL);
+	spawn("/lib/tini/scripts/rcS", rcS, environ, NULL);
 
 	for (;;) {
 		siginfo_t siginfo;

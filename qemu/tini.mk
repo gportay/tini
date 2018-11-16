@@ -1,8 +1,6 @@
 #
-#  Copyright (C) 2017-2018 Savoir-Faire Linux Inc.
-#
-#  Authors:
-#      Gaël PORTAY <gael.portay@savoirfairelinux.com>
+#  Copyright (C)      2018 Gaël PORTAY
+#                2017-2018 Savoir-Faire Linux Inc.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -17,6 +15,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+
+# Kernel support for scripts starting with #!
+LINUX_CONFIGS	+= CONFIG_BINFMT_SCRIPT=y
 
 # Automount devtmpfs at /dev, after the kernel mounted the rootfs
 LINUX_CONFIGS	+= CONFIG_DEVTMPFS=y
@@ -38,8 +39,14 @@ ramfs/lib/tini/uevent/script: uevent.sh
 
 initramfs.cpio: ramfs/lib/tini/uevent/script
 
-ramfs/run:
+ramfs/run ramfs/lib/tini/scripts:
 	mkdir -p $@
+
+ramfs/etc/init.d: | ramfs/etc ramfs/lib/tini/scripts
+	ln -sf /lib/tini/scripts $@
+
+ramfs/lib/tini/scripts/rcS: rcS | ramfs/lib/tini/scripts
+	install -D -m 755 $< $@
 
 ramfs/lib/tini/uevent/devname/console/sh: sh.tini
 	install -D -m 755 $< $@
@@ -49,6 +56,8 @@ ramfs/lib/tini/uevent/devname/tty%/sh: sh.tini
 
 initramfs.cpio: ramfs/lib/tini/uevent/devname/console/sh
 initramfs.cpio: ramfs/lib/tini/uevent/devname/tty2/sh ramfs/lib/tini/uevent/devname/tty3/sh ramfs/lib/tini/uevent/devname/tty4/sh
+initramfs.cpio: ramfs/lib/tini/scripts/rcS
+initramfs.cpio: ramfs/etc/init.d
 
 initramfs.cpio: ramfs/run
 initramfs.cpio: ramfs/sbin/tini
