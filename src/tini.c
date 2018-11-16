@@ -76,6 +76,25 @@ static inline const char *__getenv(const char *name, const char *undef)
 	return env;
 }
 
+static inline pid_t strtopid(const char *nptr)
+{
+	pid_t pid = -1;
+	int olderrno;
+	char *endptr;
+
+	olderrno = errno;
+	errno = 0;
+	pid = strtol(nptr, &endptr, 0);
+	if (pid <= 0 || errno || *endptr) {
+		errno = EINVAL;
+		pid = -1;
+	} else {
+		errno = olderrno;
+	}
+
+	return pid;
+}
+
 static char *CFS = " \t\n"; /* Command-line Field Separator */
 char **strtonargv(char *dest[], char *src, int *n);
 
@@ -907,6 +926,38 @@ int pidfile_assassinate(const char *path, struct dirent *entry, void *data)
 	return 0;
 }
 
+int pidfile_assassinate_by_pid(const char *path, struct dirent *entry,
+			       void *data)
+{
+	struct proc proc;
+	char pidfile[BUFSIZ];
+	pid_t pid;
+
+	snprintf(pidfile, sizeof(pidfile), "%s/%s", path, entry->d_name);
+
+	memset(&proc, 0, sizeof(proc));
+	proc.oldstatus = -1;
+	proc.pid = -1;
+	proc.oldpid = -1;
+	pidfile_parse(pidfile, pidfile_info, &proc);
+
+	pid = proc.oldpid;
+	if (pid == -1) 
+		pid = proc.pid;
+
+	if (pid == *(pid_t *)data) {
+		if (unlink(pidfile) == -1)
+			perror("unlink");
+
+		if (kill(proc.pid, SIGKILL) == -1)
+			perror("kill");
+
+		verbose("pid %i assassinated\n", proc.pid);
+	}
+
+	return 0;
+}
+
 int dir_parse(const char *path, directory_cb_t *callback, void *data)
 {
 	struct dirent **namelist;
@@ -1026,13 +1077,18 @@ int main_assassinate(int argc, char * const argv[])
 {
 	char **arg = (char **)argv;
 	char execline[BUFSIZ];
+	pid_t pid;
 	int i;
 
 	if (argc < 2) {
-		fprintf(stderr, "Usage: %s PATH [ARGV...]\n\n"
+		fprintf(stderr, "Usage: %s PID | PATH [ARGV...]\n\n"
 				"Error: Too few arguments!\n", argv[0]);
 		return EXIT_FAILURE;
 	}
+
+	pid = strtopid(argv[1]);
+	if (argc == 2 && pid != -1)
+		return dir_parse("/run/tini", pidfile_assassinate_by_pid, &pid);
 
 	/* Shift arguments to remove first argument (path), and append a NULL
 	   pointer (execv) */
