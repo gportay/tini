@@ -51,6 +51,9 @@ ramfs/lib/tini/scripts/rcS: rcS | ramfs/lib/tini/scripts
 ramfs/lib/tini/scripts/service: service.tini | ramfs/lib/tini/scripts
 	install -D -m 644 $< $@
 
+ramfs/lib/tini/scripts/%: %.tini | ramfs/lib/tini/scripts
+	install -D -m 755 $< $@
+
 ramfs/lib/tini/uevent/devname/console/sh: sh.tini
 	install -D -m 755 $< $@
 
@@ -61,6 +64,7 @@ initramfs.cpio: ramfs/lib/tini/uevent/devname/console/sh
 initramfs.cpio: ramfs/lib/tini/uevent/devname/tty2/sh ramfs/lib/tini/uevent/devname/tty3/sh ramfs/lib/tini/uevent/devname/tty4/sh
 initramfs.cpio: ramfs/lib/tini/scripts/rcS
 initramfs.cpio: ramfs/lib/tini/scripts/service
+initramfs.cpio: ramfs/lib/tini/scripts/sleep
 initramfs.cpio: ramfs/etc/init.d
 
 initramfs.cpio: ramfs/run
