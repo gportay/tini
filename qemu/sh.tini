@@ -1,9 +1,7 @@
-#!/bin/sh
+#!/bin/sh /lib/tini/scripts/service
 #
-#  Copyright (C) 2018 Savoir-Faire Linux Inc.
-#
-#  Authors:
-#      Gaël PORTAY <gael.portay@savoirfairelinux.com>
+#  Copyright (C) 2018 Gaël PORTAY
+#                2018 Savoir-Faire Linux Inc.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -23,17 +21,11 @@ if [ -z "$DEVNAME" ]
 then
 	echo "Error: \$DEVNAME: Invalid variable!" >&2
 	exit 1
-elif [ "$1" = "stop" ]
-then
-	assassinate <"/run/tini/pid/sh/$DEVNAME"
-	rm -f "/run/tini/pid/sh/$DEVNAME"
-	exit
 fi
 
-mkdir -p "/run/tini/pid/sh/"
-
-STDIN="$DEVNAME" \
-STDOUT="$DEVNAME" \
-STDERR="$DEVNAME" \
-ARGV0="-sh" \
-respawn /bin/sh >"/run/tini/pid/sh/$DEVNAME"
+# TODO: do not export the variable below!
+export STDIN="$DEVNAME"
+export STDOUT="$DEVNAME"
+export STDERR="$DEVNAME"
+export ARGV0="-sh"
+PIDFILE="/run/tini/pid/sh/$DEVNAME"
