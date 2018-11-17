@@ -17,25 +17,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-PATH=/usr/bin:/usr/sbin:/bin:sbin
-export PATH
+echo "emitting coldplug uevents..."
 
-mount -t proc proc /proc
-mount -t sysfs sysfs /sys
+# Coldplug
+find /sys/devices/ -name uevent | \
+while read uevent; do
+	echo add >"$uevent"
+done
 
-if ! grep -q '^devtmpfs ' /proc/mounts && \
-   ! mount -t devtmpfs devtmpfs /dev; then
-	cat <<EOF >&2
-rcS: Warning: kernel has not been compiled with devtmpfs filesystem!
-     Check for CONFIG_DEVTMPFS and
-               CONFIG_DEVTMPFS_MOUNT.
-EOF
-	mknod -m 666 /dev/null c 1 3
-	mknod -m 400 /dev/tty2 c 4 2
-	mknod -m 400 /dev/tty3 c 4 3
-	mknod -m 400 /dev/tty4 c 4 4
-	mknod -m 400 /dev/tty5 c 4 5
-	mknod -m 400 /dev/tty6 c 4 6
-fi
-
-raise rcS start
+echo "coldplug events emitted!"
