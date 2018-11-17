@@ -51,11 +51,13 @@ ramfs/lib/tini/scripts/service: service.tini | ramfs/lib/tini/scripts
 ramfs/lib/tini/scripts/%: %.tini | ramfs/lib/tini/scripts
 	install -D -m 755 $< $@
 
-ramfs/lib/tini/uevent/devname/console/sh: sh.tini
-	install -D -m 755 $< $@
+ramfs/lib/tini/uevent/devname/console/sh: ramfs/lib/tini/scripts/sh
+	mkdir -p $(@D)
+	ln -sf /lib/tini/scripts/sh $@
 
-ramfs/lib/tini/uevent/devname/tty%/sh: sh.tini
-	install -D -m 755 $< $@
+ramfs/lib/tini/uevent/devname/tty%/sh: ramfs/lib/tini/scripts/sh
+	mkdir -p $(@D)
+	ln -sf /lib/tini/scripts/sh $@
 
 initramfs.cpio: ramfs/lib/tini/uevent/devname/console/sh
 initramfs.cpio: ramfs/lib/tini/uevent/devname/tty2/sh ramfs/lib/tini/uevent/devname/tty3/sh ramfs/lib/tini/uevent/devname/tty4/sh
