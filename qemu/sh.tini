@@ -17,6 +17,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+# Try to deduce DEVNAME from the script name.
+if [ -z "$DEVNAME" ] &&
+   echo "$__script" | grep -q "^/lib/tini/uevent/devname/" 
+then
+	DEVNAME="${__script##/lib/tini/uevent/devname/}"
+	DEVNAME="${DEVNAME%/*}"
+fi
+
 if [ -z "$DEVNAME" ]
 then
 	echo "Error: \$DEVNAME: Invalid variable!" >&2
