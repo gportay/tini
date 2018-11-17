@@ -35,7 +35,16 @@ shift
 
 PIDFILE="/run/tini/pid/${__script##*/}"
 
+pre_start() { :; }
+pre_stop() { :; }
+
 start() {
+	if ! pre_start
+	then
+		echo -n "Abort! "
+		return 1
+	fi
+
 	mkdir -p "${PIDFILE%/*}"
 	/sbin/respawn "$@" >"$PIDFILE"
 }
@@ -44,6 +53,12 @@ stop() {
 	if ! [ -e "$PIDFILE" ]
 	then
 		echo -n "$PIDFILE: No such pidfile! "
+		return 1
+	fi
+
+	if ! pre_stop
+	then
+		echo -n "Abort! "
 		return 1
 	fi
 
