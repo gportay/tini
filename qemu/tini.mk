@@ -62,6 +62,7 @@ ramfs/lib/tini/uevent/devname/tty%/sh: ramfs/lib/tini/scripts/sh
 	mkdir -p $(@D)
 	ln -sf /lib/tini/scripts/sh $@
 
+initramfs.cpio: ramfs/lib/tini/event/rcS/05mount
 initramfs.cpio: ramfs/lib/tini/event/rcS/10coldplug
 initramfs.cpio: ramfs/lib/tini/event/rcS/20hostname
 initramfs.cpio: ramfs/lib/tini/uevent/devname/console/sh
