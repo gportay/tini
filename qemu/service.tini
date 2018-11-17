@@ -36,7 +36,9 @@ shift
 PIDFILE="/run/tini/pid/${__script##*/}"
 
 pre_start() { :; }
+post_start() { :; }
 pre_stop() { :; }
+post_stop() { :; }
 
 start() {
 	if ! pre_start
@@ -47,6 +49,12 @@ start() {
 
 	mkdir -p "${PIDFILE%/*}"
 	/sbin/respawn "$@" >"$PIDFILE"
+
+	if ! post_start
+	then
+		# TODO: Behavior is to be defined
+		return 1
+	fi
 }
 
 stop() {
@@ -64,6 +72,12 @@ stop() {
 
 	/sbin/assassinate "$@" <"$PIDFILE"
 	rm -f "$PIDFILE"
+
+	if ! post_stop
+	then
+		# TODO: Behavior is to be defined
+		return 1
+	fi
 }
 
 . "$__script"
