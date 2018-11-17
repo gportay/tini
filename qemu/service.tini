@@ -41,6 +41,12 @@ start() {
 }
 
 stop() {
+	if ! [ -e "$PIDFILE" ]
+	then
+		echo -n "$PIDFILE: No such pidfile! "
+		return 1
+	fi
+
 	/sbin/assassinate "$@" <"$PIDFILE"
 	rm -f "$PIDFILE"
 }
