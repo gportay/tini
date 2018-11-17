@@ -67,9 +67,15 @@ then
 	set +f
 fi
 
+# If DESCRIPTION is unset, use script name.
+if [ -z "$DESCRIPTION" ]
+then
+	DESCRIPTION="${__script##*/}"
+fi
+
 case "$__action" in
 start)
-	echo -n "starting ${__script##*/}: " >&2
+	echo -n "starting $DESCRIPTION: " >&2
 	if start "$EXEC" "$@"
 	then
 		echo "done" >&2
@@ -78,7 +84,7 @@ start)
 	fi
 	;;
 stop)
-	echo -n "stopping ${__script##*/}: " >&2
+	echo -n "stopping $DESCRIPTION: " >&2
 	if stop
 	then
 		echo "done" >&2
