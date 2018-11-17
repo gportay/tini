@@ -31,6 +31,14 @@ then
 	exit 1
 fi
 
+# Do not stop interactive shell on console.
+pre_stop() {
+	if [ "$DEVNAME" = "console" ]
+	then
+		return 1
+	fi
+}
+
 # TODO: do not export the variable below!
 export STDIN="$DEVNAME"
 export STDOUT="$DEVNAME"
