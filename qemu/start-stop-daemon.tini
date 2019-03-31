@@ -29,4 +29,20 @@ run_stop() {
 	rm -f "$PIDFILE"
 }
 
+run_status() {
+	local exec
+	local pid
+	exec="$1"
+	shift
+	pid="$(cat "$PIDFILE" 2>/dev/null || true)"
+	if [ -z "$pid" ] || \
+	   [ "$(readlink "/proc/$pid/exe")" != "$exec" ] && \
+	   [ "$(cat "/proc/$pid/comm" 2>/dev/null)" != "${exec##*/}" ]
+	then
+		return 1
+	fi
+
+	echo "$pid"
+}
+
 . "${0%/*}/service"
