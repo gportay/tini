@@ -1043,7 +1043,7 @@ int main_spawn(int argc, char * const argv[])
 	}
 
 	/* Shift arguments to remove first argument (path), and append a NULL
-	   pointer (execv) */
+	 * pointer (execv) */
 	for (i = 0; i < (argc - 1); i++)
 		arg[i] = arg[i+1];
 	arg[i] = NULL;
@@ -1071,7 +1071,7 @@ int main_respawn(int argc, char * const argv[])
 	}
 
 	/* Shift arguments to remove first argument (path), and append a NULL
-	   pointer (execv) */
+	 * pointer (execv) */
 	for (i = 0; i < (argc - 1); i++)
 		arg[i] = arg[i+1];
 	arg[i] = NULL;
@@ -1123,7 +1123,7 @@ int main_assassinate(int argc, char * const argv[])
 	}
 
 	/* Shift arguments to remove first argument (path), and append a NULL
-	   pointer (execv) */
+	 * pointer (execv) */
 	for (i = 0; i < (argc - 1); i++)
 		arg[i] = arg[i+1];
 	arg[i] = NULL;
@@ -1154,7 +1154,7 @@ int main_zombize(int argc, char * const argv[])
 	}
 
 	/* Shift arguments to remove first argument (path), and append a NULL
-	   pointer (execv) */
+	 * pointer (execv) */
 	for (i = 0; i < (argc - 1); i++)
 		arg[i] = arg[i+1];
 	arg[i] = NULL;
