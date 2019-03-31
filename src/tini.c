@@ -1,5 +1,5 @@
 /*
- *  Copyright (C)      2018 Gaël PORTAY
+ *  Copyright (C) 2018-2019 Gaël PORTAY
  *                2017-2018 Savoir-Faire Linux Inc.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -1000,7 +1000,8 @@ int dir_parse(const char *path, directory_cb_t *callback, void *data)
 	while (n--) {
 		if (strcmp(namelist[n]->d_name, ".") &&
 		    strcmp(namelist[n]->d_name, "..")) {
-			callback(path, namelist[n], data);
+			if (callback(path, namelist[n], data))
+				ret++;
 		}
 		free(namelist[n]);
 	}
