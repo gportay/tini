@@ -988,6 +988,54 @@ int pidfile_assassinate_by_pid(const char *path, struct dirent *entry,
 	return 0;
 }
 
+int pidfile_status(const char *path, struct dirent *entry, void *data)
+{
+	struct proc proc;
+	char pidfile[BUFSIZ];
+
+	snprintf(pidfile, sizeof(pidfile), "%s/%s", path, entry->d_name);
+
+	memset(&proc, 0, sizeof(proc));
+	proc.oldstatus = -1;
+	proc.pid = -1;
+	proc.oldpid = -1;
+	pidfile_parse(pidfile, pidfile_info, &proc);
+
+	if (!strcmp(proc.exec, (const char *)data)) {
+		printf("%i\n", proc.pid);
+		return 1;
+	}
+
+	return 0;
+}
+
+int pidfile_status_by_pid(const char *path, struct dirent *entry,
+			  void *data)
+{
+	struct proc proc;
+	char pidfile[BUFSIZ];
+	pid_t pid;
+
+	snprintf(pidfile, sizeof(pidfile), "%s/%s", path, entry->d_name);
+
+	memset(&proc, 0, sizeof(proc));
+	proc.oldstatus = -1;
+	proc.pid = -1;
+	proc.oldpid = -1;
+	pidfile_parse(pidfile, pidfile_info, &proc);
+
+	pid = proc.oldpid;
+	if (pid == -1)
+		pid = proc.pid;
+
+	if (pid == *(pid_t *)data) {
+		printf("%i\n", proc.pid);
+		return 1;
+	}
+
+	return 0;
+}
+
 int dir_parse(const char *path, directory_cb_t *callback, void *data)
 {
 	struct dirent **namelist;
@@ -1141,6 +1189,40 @@ int main_assassinate(int argc, char * const argv[])
 	return ret == 0 ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
+int main_status(int argc, char * const argv[])
+{
+	char **arg = (char **)argv;
+	const char *arg0, *path;
+	char execline[BUFSIZ];
+	pid_t pid = -1;
+	int i;
+
+	if (argc == 1)
+		pid = readpid(STDIN_FILENO);
+	else if (argc == 2)
+		pid = strtopid(argv[1]);
+
+	if (pid != -1)
+		return dir_parse("/run/tini", pidfile_status_by_pid, &pid) == 0 ? EXIT_FAILURE : EXIT_SUCCESS;
+
+	/* Shift arguments to remove first argument (path), and append a NULL
+	   pointer (execv) */
+	for (i = 0; i < (argc - 1); i++)
+		arg[i] = arg[i+1];
+	arg[i] = NULL;
+
+	path = argv[0];
+	/* The first argument, by convention, should point to the filename
+	 * associated with the file being executed. */
+	arg0 = getenv("ARGV0");
+	if (arg0)
+		*arg = (char *)arg0;
+
+	strargv(execline, sizeof(execline), path, arg);
+
+	return dir_parse("/run/tini", pidfile_status, execline) == 0 ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
 int main_zombize(int argc, char * const argv[])
 {
 	const char **arg = (const char **)argv;
@@ -1187,6 +1269,8 @@ int main_applet(int argc, char * const argv[])
 		return main_respawn(argc, &argv[0]);
 	else if (!strcmp(app, "assassinate"))
 		return main_assassinate(argc, &argv[0]);
+	else if (!strcmp(app, "status"))
+		return main_status(argc, &argv[0]);
 	else if (!strcmp(app, "zombize"))
 		return main_zombize(argc, &argv[0]);
 
