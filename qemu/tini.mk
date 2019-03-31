@@ -1,5 +1,5 @@
 #
-#  Copyright (C)      2018 Gaël PORTAY
+#  Copyright (C) 2018-2019 Gaël PORTAY
 #                2017-2018 Savoir-Faire Linux Inc.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -69,6 +69,7 @@ initramfs.cpio: ramfs/lib/tini/uevent/devname/console/sh
 initramfs.cpio: ramfs/lib/tini/uevent/devname/tty2/sh ramfs/lib/tini/uevent/devname/tty3/sh ramfs/lib/tini/uevent/devname/tty4/sh
 initramfs.cpio: ramfs/lib/tini/scripts/rcS
 initramfs.cpio: ramfs/lib/tini/scripts/service
+initramfs.cpio: ramfs/lib/tini/scripts/start-stop-daemon
 initramfs.cpio: ramfs/lib/tini/scripts/sh
 initramfs.cpio: ramfs/lib/tini/scripts/sleep
 initramfs.cpio: ramfs/etc/init.d
