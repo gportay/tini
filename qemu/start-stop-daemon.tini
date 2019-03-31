@@ -45,4 +45,13 @@ run_status() {
 	echo "$pid"
 }
 
+run_foreground() {
+	local exec
+	exec="$1"
+	shift
+	start-stop-daemon --start --pidfile "$PIDFILE" --make-pidfile \
+		--chuid "$USER" --exec "$exec" -- "$@"
+	rm -f "$PIDFILE"
+}
+
 . "${0%/*}/service"

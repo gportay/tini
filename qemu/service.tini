@@ -86,6 +86,29 @@ stop() {
 	fi
 }
 
+foreground() {
+	if ! pre_start
+	then
+		echo -n "Abort! "
+		return 1
+	fi
+
+	run_forground "$@"
+
+	if ! post_start
+	then
+		# TODO: Behavior is to be defined
+		return 1
+	fi
+}
+
+if ! command -v run_foreground >/dev/null
+then
+	run_foreground() {
+		"$@"
+	}
+fi
+
 if ! command -v run_stop >/dev/null
 then
 	run_stop() {
@@ -155,7 +178,7 @@ stop)
 		exit "$?"
 	fi
 
-	echo "Usage: ${__script##*/} start|stop|status [ARGS...]" >&2
+	echo "Usage: ${__script##*/} start|stop|status|foreground [ARGS...]" >&2
 	exit 1
 	;;
 esac
