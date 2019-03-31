@@ -949,6 +949,7 @@ int pidfile_assassinate(const char *path, struct dirent *entry, void *data)
 			perror("kill");
 
 		verbose("pid %i assassinated\n", proc.pid);
+		return 1;
 	}
 
 	return 0;
@@ -981,6 +982,7 @@ int pidfile_assassinate_by_pid(const char *path, struct dirent *entry,
 			perror("kill");
 
 		verbose("pid %i assassinated\n", proc.pid);
+		return 1;
 	}
 
 	return 0;
@@ -1108,15 +1110,17 @@ int main_assassinate(int argc, char * const argv[])
 	const char *arg0, *path;
 	char execline[BUFSIZ];
 	pid_t pid = -1;
-	int i;
+	int i, ret;
 
 	if (argc == 1)
 		pid = readpid(STDIN_FILENO);
 	else if (argc == 2)
 		pid = strtopid(argv[1]);
 
-	if (pid != -1)
-		return dir_parse("/run/tini", pidfile_assassinate_by_pid, &pid);
+	if (pid != -1) {
+		ret = dir_parse("/run/tini", pidfile_assassinate_by_pid, &pid);
+		return ret == 0 ? EXIT_FAILURE : EXIT_SUCCESS;
+	}
 
 	/* Shift arguments to remove first argument (path), and append a NULL
 	   pointer (execv) */
@@ -1133,7 +1137,8 @@ int main_assassinate(int argc, char * const argv[])
 
 	strargv(execline, sizeof(execline), path, arg);
 
-	return dir_parse("/run/tini", pidfile_assassinate, execline);
+	ret = dir_parse("/run/tini", pidfile_assassinate, execline);
+	return ret == 0 ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
 int main_zombize(int argc, char * const argv[])
