@@ -971,7 +971,7 @@ int pidfile_assassinate_by_pid(const char *path, struct dirent *entry,
 	pidfile_parse(pidfile, pidfile_info, &proc);
 
 	pid = proc.oldpid;
-	if (pid == -1) 
+	if (pid == -1)
 		pid = proc.pid;
 
 	if (pid == *(pid_t *)data) {
