@@ -231,6 +231,7 @@ int zombize(const char *path, char * const argv[], const char *devname)
 	}
 
 	execv(path, argv);
+	perror("execv");
 	_exit(127);
 }
 
@@ -296,6 +297,7 @@ int spawn(const char *path, char * const argv[], char * const envp[],
 	}
 
 	execvpe(path, argv, envp);
+	perror("execvpe");
 	_exit(127);
 }
 
@@ -425,6 +427,7 @@ int respawn(const char *path, char * const argv[], struct proc *proc)
 			perror("setuid");
 
 	execv(path, argv);
+	perror("execv");
 	_exit(127);
 }
 
