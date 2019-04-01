@@ -154,6 +154,8 @@ struct proc {
 	int oldstatus;
 	pid_t pid;
 	pid_t oldpid;
+	uid_t uid;
+	gid_t gid;
 };
 
 int spawn(const char *path, char * const argv[], char * const envp[],
@@ -386,6 +388,10 @@ int respawn(const char *path, char * const argv[], struct proc *proc)
 			fprintf(f, "OLDSTATUS=%i\n", proc->oldstatus);
 		if (proc->oldpid != -1)
 			fprintf(f, "OLDPID=%i\n", proc->oldpid);
+		if (proc->uid)
+			fprintf(f, "UID=%i\n", proc->uid);
+		if (proc->gid)
+			fprintf(f, "GID=%i\n", proc->gid);
 
 		fclose(f);
 		f = NULL;
@@ -408,6 +414,15 @@ int respawn(const char *path, char * const argv[], struct proc *proc)
 
 	if (chdir("/") == -1)
 		perror("chdir");
+
+	/* Drop privileges */
+	if (proc->gid)
+		if (setgid(proc->gid))
+			perror("setgid");
+
+	if (proc->uid)
+		if (setuid(proc->uid))
+			perror("setuid");
 
 	execv(path, argv);
 	_exit(127);
@@ -1132,6 +1147,8 @@ int main_respawn(int argc, char * const argv[])
 	proc.oldstatus = strtol(__getenv("OLDSTATUS", "-1"), NULL, 0);
 	proc.pid = -1;
 	proc.oldpid = strtol(__getenv("OLDPID", "-1"), NULL, 0);
+	proc.uid = strtol(__getenv("UID", "0"), NULL, 0);
+	proc.gid = strtol(__getenv("GID", "0"), NULL, 0);
 
 	path = argv[0];
 	/* The first argument, by convention, should point to the filename
@@ -1145,6 +1162,8 @@ int main_respawn(int argc, char * const argv[])
 	__unsetenv("COUNTER");
 	__unsetenv("OLDSTATUS");
 	__unsetenv("OLDPID");
+	__unsetenv("UID");
+	__unsetenv("GID");
 	if (respawn(path, argv, &proc))
 		return EXIT_FAILURE;
 

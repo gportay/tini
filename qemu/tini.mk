@@ -31,6 +31,9 @@ LINUX_CONFIGS	+= CONFIG_UNIX=y
 # sysfs file system support
 LINUX_CONFIGS	+= CONFIG_SYSFS=y
 
+# Multiple users, groups and capabilities support
+LINUX_CONFIGS	+= CONFIG_MULTIUSER=y
+
 .PHONY: all
 all:
 

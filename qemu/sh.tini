@@ -44,5 +44,10 @@ export STDIN="$DEVNAME"
 export STDOUT="$DEVNAME"
 export STDERR="$DEVNAME"
 export ARGV0="-sh"
+if [ "$DEVNAME" != "console" ]
+then
+	export UID="1000"
+	export GID="1000"
+fi
 PIDFILE="/run/tini/pid/sh/$DEVNAME"
 DESCRIPTION="interactive shell on $DEVNAME"
