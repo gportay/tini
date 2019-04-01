@@ -76,6 +76,8 @@ initramfs.cpio: ramfs/lib/tini/scripts/start-stop-daemon
 initramfs.cpio: ramfs/lib/tini/scripts/sh
 initramfs.cpio: ramfs/lib/tini/scripts/sleep
 initramfs.cpio: ramfs/lib/tini/scripts/crond
+initramfs.cpio: ramfs/lib/tini/scripts/syslogd
+initramfs.cpio: ramfs/lib/tini/scripts/klogd
 initramfs.cpio: ramfs/etc/init.d
 
 initramfs.cpio: ramfs/var/run ramfs/lib/tini/event/rcS

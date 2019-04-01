@@ -1,0 +1,62 @@
+#!/bin/sh /lib/tini/scripts/service
+#
+#  Copyright (C) 2019 Gaël PORTAY
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 2.1 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+PIDFILE="/var/run/syslogd.pid"
+
+run_syslogd() {
+	mkdir -p /var/log/
+	"$@" -O /var/log/message
+}
+
+run_start() {
+	run_syslogd "$@"
+}
+
+run_stop() {
+	local pid
+	pid="$(cat "$PIDFILE" 2>/dev/null || true)"
+	if [ -z "$pid" ] || \
+	   [ "$(readlink "/proc/$pid/exe")" != "$EXEC" ] && \
+	   [ "$(cat "/proc/$pid/comm" 2>/dev/null)" != "${EXEC##*/}" ]
+	then
+		return 1
+	fi
+
+	kill -9 "$pid"
+	rm -f "$PIDFILE"
+}
+
+run_foreground() {
+	run_syslogd "$@" -n
+}
+
+run_status() {
+	local exec
+	local pid
+	exec="$1"
+	shift
+	pid="$(cat "$PIDFILE" 2>/dev/null || true)"
+	if [ -z "$pid" ] || \
+	   [ "$(readlink "/proc/$pid/exe")" != "$exec" ] && \
+	   [ "$(cat "/proc/$pid/comm" 2>/dev/null)" != "${exec##*/}" ]
+	then
+		return 1
+	fi
+
+	echo "$pid"
+}
