@@ -39,7 +39,7 @@ include busybox.mk
 
 initramfs.cpio: ramfs
 
-ramfs ramfs/dev ramfs/proc ramfs/sys ramfs/etc ramfs/root:
+ramfs ramfs/dev ramfs/proc ramfs/sys ramfs/etc ramfs/root ramfs/var:
 	mkdir -p $@
 
 ramfs/init ramfs/linuxrc:

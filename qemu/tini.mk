@@ -42,6 +42,9 @@ initramfs.cpio: ramfs/lib/tini/uevent/script
 ramfs/run ramfs/lib/tini/scripts ramfs/lib/tini/event/rcS:
 	mkdir -p $@
 
+ramfs/var/run: | ramfs/run ramfs/var
+	ln -sf /run $@
+
 ramfs/etc/init.d: | ramfs/etc ramfs/lib/tini/scripts
 	ln -sf /lib/tini/scripts $@
 
@@ -72,9 +75,10 @@ initramfs.cpio: ramfs/lib/tini/scripts/service
 initramfs.cpio: ramfs/lib/tini/scripts/start-stop-daemon
 initramfs.cpio: ramfs/lib/tini/scripts/sh
 initramfs.cpio: ramfs/lib/tini/scripts/sleep
+initramfs.cpio: ramfs/lib/tini/scripts/crond
 initramfs.cpio: ramfs/etc/init.d
 
-initramfs.cpio: ramfs/run ramfs/lib/tini/event/rcS
+initramfs.cpio: ramfs/var/run ramfs/lib/tini/event/rcS
 initramfs.cpio: ramfs/bin/raise
 initramfs.cpio: ramfs/sbin/tini
 initramfs.cpio: ramfs/sbin/halt ramfs/sbin/poweroff ramfs/sbin/reboot
