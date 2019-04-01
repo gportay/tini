@@ -54,6 +54,12 @@ ramfs/etc/init.d: | ramfs/etc ramfs/lib/tini/scripts
 ramfs/lib/tini/scripts/%: %.tini | ramfs/lib/tini/scripts
 	install -D -m 755 $< $@
 
+ramfs/lib/tini/event/rcS/30syslogd: ramfs/lib/tini/scripts/syslogd
+	ln -sf /lib/tini/scripts/$(<F) $@
+
+ramfs/lib/tini/event/rcS/35klogd: ramfs/lib/tini/scripts/klogd
+	ln -sf /lib/tini/scripts/$(<F) $@
+
 ramfs/lib/tini/event/rcS/%: %.rcS
 	install -D -m 755 $< $@
 
@@ -68,6 +74,8 @@ ramfs/lib/tini/uevent/devname/tty%/sh: ramfs/lib/tini/scripts/sh
 initramfs.cpio: ramfs/lib/tini/event/rcS/05mount
 initramfs.cpio: ramfs/lib/tini/event/rcS/10coldplug
 initramfs.cpio: ramfs/lib/tini/event/rcS/20hostname
+initramfs.cpio: ramfs/lib/tini/event/rcS/30syslogd
+initramfs.cpio: ramfs/lib/tini/event/rcS/35klogd
 initramfs.cpio: ramfs/lib/tini/uevent/devname/console/sh
 initramfs.cpio: ramfs/lib/tini/uevent/devname/tty2/sh ramfs/lib/tini/uevent/devname/tty3/sh ramfs/lib/tini/uevent/devname/tty4/sh
 initramfs.cpio: ramfs/lib/tini/scripts/rcS

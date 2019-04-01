@@ -135,7 +135,13 @@ fi
 # If EXEC is unset, guess the executable from script name.
 if [ -z "$EXEC" ]
 then
-	EXEC="$(command -v "${__script##*/}")"
+	EXEC="$(command -v "${__script##*/}" || true)"
+fi
+# If EXEC is still unset, remove the two digit sequence number.
+if [ -z "$EXEC" ]
+then
+	EXEC="${__script##*/}"
+	EXEC="$(command -v "${EXEC:2}")"
 fi
 
 # If ARGS is set, replace all arguments.
@@ -146,10 +152,10 @@ then
 	set +f
 fi
 
-# If DESCRIPTION is unset, use script name.
+# If DESCRIPTION is unset, use EXEC.
 if [ -z "$DESCRIPTION" ]
 then
-	DESCRIPTION="${__script##*/}"
+	DESCRIPTION="${EXEC##*/}"
 fi
 
 case "$__action" in
