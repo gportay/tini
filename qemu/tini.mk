@@ -51,9 +51,6 @@ ramfs/var/run: | ramfs/run ramfs/var
 ramfs/etc/init.d: | ramfs/etc ramfs/lib/tini/scripts
 	ln -sf /lib/tini/scripts $@
 
-ramfs/lib/tini/scripts/service: service.tini | ramfs/lib/tini/scripts
-	install -D -m 644 $< $@
-
 ramfs/lib/tini/scripts/%: %.tini | ramfs/lib/tini/scripts
 	install -D -m 755 $< $@
 
