@@ -77,7 +77,7 @@ initramfs.cpio: ramfs/run ramfs/lib/tini/event/rcS
 initramfs.cpio: ramfs/bin/raise
 initramfs.cpio: ramfs/sbin/tini
 initramfs.cpio: ramfs/sbin/halt ramfs/sbin/poweroff ramfs/sbin/reboot
-initramfs.cpio: ramfs/sbin/spawn ramfs/sbin/respawn ramfs/sbin/assassinate ramfs/sbin/zombize ramfs/sbin/re-exec
+initramfs.cpio: ramfs/sbin/spawn ramfs/sbin/respawn ramfs/sbin/assassinate ramfs/sbin/status ramfs/sbin/zombize ramfs/sbin/re-exec
 
 tini: override CFLAGS+=-Wall -Wextra -Werror
 tini: override LDFLAGS+=-static
@@ -91,7 +91,7 @@ ramfs/sbin/tini: tini | ramfs/sbin
 ramfs/sbin/halt ramfs/sbin/poweroff ramfs/sbin/reboot: ramfs/sbin/tini | ramfs/sbin
 	ln -sf $(<F) $@
 
-ramfs/sbin/spawn ramfs/sbin/respawn ramfs/sbin/assassinate ramfs/sbin/zombize ramfs/sbin/re-exec: ramfs/sbin/tini | ramfs/sbin
+ramfs/sbin/spawn ramfs/sbin/respawn ramfs/sbin/assassinate ramfs/sbin/status ramfs/sbin/zombize ramfs/sbin/re-exec: ramfs/sbin/tini | ramfs/sbin
 	ln -sf $(<F) $@
 
 # ex: filetype=makefile

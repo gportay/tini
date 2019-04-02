@@ -1,5 +1,5 @@
 /*
- *  Copyright (C)      2018 Gaël PORTAY
+ *  Copyright (C) 2018-2019 Gaël PORTAY
  *                2017-2018 Savoir-Faire Linux Inc.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -154,6 +154,8 @@ struct proc {
 	int oldstatus;
 	pid_t pid;
 	pid_t oldpid;
+	uid_t uid;
+	gid_t gid;
 };
 
 int spawn(const char *path, char * const argv[], char * const envp[],
@@ -386,6 +388,10 @@ int respawn(const char *path, char * const argv[], struct proc *proc)
 			fprintf(f, "OLDSTATUS=%i\n", proc->oldstatus);
 		if (proc->oldpid != -1)
 			fprintf(f, "OLDPID=%i\n", proc->oldpid);
+		if (proc->uid)
+			fprintf(f, "UID=%i\n", proc->uid);
+		if (proc->gid)
+			fprintf(f, "GID=%i\n", proc->gid); 
 
 		fclose(f);
 		f = NULL;
@@ -408,6 +414,15 @@ int respawn(const char *path, char * const argv[], struct proc *proc)
 
 	if (chdir("/") == -1)
 		perror("chdir");
+
+	/* Drop privileges */
+	if (proc->gid)
+		if (setgid(proc->gid))
+			perror("setgid");
+
+	if (proc->uid)
+		if (setuid(proc->uid))
+			perror("setuid");
 
 	execv(path, argv);
 	_exit(127);
@@ -949,6 +964,7 @@ int pidfile_assassinate(const char *path, struct dirent *entry, void *data)
 			perror("kill");
 
 		verbose("pid %i assassinated\n", proc.pid);
+		return 1;
 	}
 
 	return 0;
@@ -981,6 +997,55 @@ int pidfile_assassinate_by_pid(const char *path, struct dirent *entry,
 			perror("kill");
 
 		verbose("pid %i assassinated\n", proc.pid);
+		return 1;
+	}
+
+	return 0;
+}
+
+int pidfile_status(const char *path, struct dirent *entry, void *data)
+{
+	struct proc proc;
+	char pidfile[BUFSIZ];
+
+	snprintf(pidfile, sizeof(pidfile), "%s/%s", path, entry->d_name);
+
+	memset(&proc, 0, sizeof(proc));
+	proc.oldstatus = -1;
+	proc.pid = -1;
+	proc.oldpid = -1;
+	pidfile_parse(pidfile, pidfile_info, &proc);
+
+	if (!strcmp(proc.exec, (const char *)data)) {
+		printf("%i\n", proc.pid);
+		return 1;
+	}
+
+	return 0;
+}
+
+int pidfile_status_by_pid(const char *path, struct dirent *entry,
+			  void *data)
+{
+	struct proc proc;
+	char pidfile[BUFSIZ];
+	pid_t pid;
+
+	snprintf(pidfile, sizeof(pidfile), "%s/%s", path, entry->d_name);
+
+	memset(&proc, 0, sizeof(proc));
+	proc.oldstatus = -1;
+	proc.pid = -1;
+	proc.oldpid = -1;
+	pidfile_parse(pidfile, pidfile_info, &proc);
+
+	pid = proc.oldpid;
+	if (pid == -1) 
+		pid = proc.pid;
+
+	if (pid == *(pid_t *)data) {
+		printf("%i\n", proc.pid);
+		return 1;
 	}
 
 	return 0;
@@ -1000,7 +1065,8 @@ int dir_parse(const char *path, directory_cb_t *callback, void *data)
 	while (n--) {
 		if (strcmp(namelist[n]->d_name, ".") &&
 		    strcmp(namelist[n]->d_name, "..")) {
-			callback(path, namelist[n], data);
+			if (callback(path, namelist[n], data))
+				ret++;
 		}
 		free(namelist[n]);
 	}
@@ -1081,6 +1147,8 @@ int main_respawn(int argc, char * const argv[])
 	proc.oldstatus = strtol(__getenv("OLDSTATUS", "-1"), NULL, 0);
 	proc.pid = -1;
 	proc.oldpid = strtol(__getenv("OLDPID", "-1"), NULL, 0);
+	proc.uid = strtol(__getenv("UID", "0"), NULL, 0);
+	proc.gid = strtol(__getenv("GID", "0"), NULL, 0);
 
 	path = argv[0];
 	/* The first argument, by convention, should point to the filename
@@ -1094,6 +1162,8 @@ int main_respawn(int argc, char * const argv[])
 	__unsetenv("COUNTER");
 	__unsetenv("OLDSTATUS");
 	__unsetenv("OLDPID");
+	__unsetenv("UID");
+	__unsetenv("GID");
 	if (respawn(path, argv, &proc))
 		return EXIT_FAILURE;
 
@@ -1115,7 +1185,7 @@ int main_assassinate(int argc, char * const argv[])
 		pid = strtopid(argv[1]);
 
 	if (pid != -1)
-		return dir_parse("/run/tini", pidfile_assassinate_by_pid, &pid);
+		return dir_parse("/run/tini", pidfile_assassinate_by_pid, &pid) == 0 ? EXIT_FAILURE : EXIT_SUCCESS;
 
 	/* Shift arguments to remove first argument (path), and append a NULL
 	   pointer (execv) */
@@ -1132,7 +1202,41 @@ int main_assassinate(int argc, char * const argv[])
 
 	strargv(execline, sizeof(execline), path, arg);
 
-	return dir_parse("/run/tini", pidfile_assassinate, execline);
+	return dir_parse("/run/tini", pidfile_assassinate, execline) == 0 ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
+int main_status(int argc, char * const argv[])
+{
+	char **arg = (char **)argv;
+	const char *arg0, *path;
+	char execline[BUFSIZ];
+	pid_t pid = -1;
+	int i;
+
+	if (argc == 1)
+		pid = readpid(STDIN_FILENO);
+	else if (argc == 2)
+		pid = strtopid(argv[1]);
+
+	if (pid != -1)
+		return dir_parse("/run/tini", pidfile_status_by_pid, &pid) == 0 ? EXIT_FAILURE : EXIT_SUCCESS;
+
+	/* Shift arguments to remove first argument (path), and append a NULL
+	   pointer (execv) */
+	for (i = 0; i < (argc - 1); i++)
+		arg[i] = arg[i+1];
+	arg[i] = NULL;
+
+	path = argv[0];
+	/* The first argument, by convention, should point to the filename
+	 * associated with the file being executed. */
+	arg0 = getenv("ARGV0");
+	if (arg0)
+		*arg = (char *)arg0;
+
+	strargv(execline, sizeof(execline), path, arg);
+
+	return dir_parse("/run/tini", pidfile_status, execline) == 0 ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
 int main_zombize(int argc, char * const argv[])
@@ -1181,6 +1285,8 @@ int main_applet(int argc, char * const argv[])
 		return main_respawn(argc, &argv[0]);
 	else if (!strcmp(app, "assassinate"))
 		return main_assassinate(argc, &argv[0]);
+	else if (!strcmp(app, "status"))
+		return main_status(argc, &argv[0]);
 	else if (!strcmp(app, "zombize"))
 		return main_zombize(argc, &argv[0]);
 

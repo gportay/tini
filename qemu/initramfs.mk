@@ -53,6 +53,7 @@ ramfs/dev/console: | ramfs/dev
 
 ramfs/etc/passwd: | ramfs/etc
 	echo "root::0:0:root:/root:/bin/sh" >$@
+	echo "tini::1000:1000:tini user:/home/tini:/bin/sh" >>$@
 
 ramfs/etc/group: | ramfs/etc
 	echo "root:x:0:root" >$@
