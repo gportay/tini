@@ -80,6 +80,7 @@ initramfs.cpio: ramfs/lib/tini/uevent/devname/console/sh
 initramfs.cpio: ramfs/lib/tini/uevent/devname/tty2/sh ramfs/lib/tini/uevent/devname/tty3/sh ramfs/lib/tini/uevent/devname/tty4/sh
 initramfs.cpio: ramfs/lib/tini/scripts/rcS
 initramfs.cpio: ramfs/lib/tini/scripts/service
+initramfs.cpio: ramfs/lib/tini/scripts/respawn
 initramfs.cpio: ramfs/lib/tini/scripts/start-stop-daemon
 initramfs.cpio: ramfs/lib/tini/scripts/sh
 initramfs.cpio: ramfs/lib/tini/scripts/sleep
