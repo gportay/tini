@@ -60,7 +60,8 @@ if ! command -v run_start >/dev/null
 then
 	run_start() {
 		mkdir -p "${PIDFILE%/*}"
-		/sbin/respawn "$@" >"$PIDFILE"
+		"$@" &
+		echo -n "$!" >"$PIDFILE"
 	}
 fi
 
@@ -112,7 +113,13 @@ fi
 if ! command -v run_stop >/dev/null
 then
 	run_stop() {
-		/sbin/assassinate "$@" <"$PIDFILE"
+		if ! [ -e "$PIDFILE" ]
+		then
+			echo "$PIDFILE: No such pidfile!"
+			return 1
+		fi
+
+		/bin/kill -SIGKILL "$(cat "$PIDFILE")"
 		rm -f "$PIDFILE"
 	}
 fi

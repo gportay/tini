@@ -1,4 +1,4 @@
-#!/bin/sh /lib/tini/scripts/service
+#!/bin/sh /lib/tini/scripts/respawn
 #
 #  Copyright (C) 2018 Gaël PORTAY
 #                2018 Savoir-Faire Linux Inc.
