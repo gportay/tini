@@ -37,4 +37,4 @@ ramfs/etc/cukinia/cukinia.conf: cukinia.conf
 ramfs/usr/bin/cukinia: cukinia/cukinia
 	install -D -m 755 $< $@
 
-# ex: filetype=makefile
+# ex: filetype=make

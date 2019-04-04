@@ -47,4 +47,4 @@ cukinia_clean:
 .PHONY: cukinia_mrproper
 cukinia_mrproper: cukinia_clean
 
-# ex: filetype=makefile
+# ex: filetype=make
