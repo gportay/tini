@@ -90,4 +90,4 @@ linux_menuconfig:
 linux_%:
 	$(MAKE) -C linux $*
 
-# ex: filetype=makefile
+# ex: filetype=make

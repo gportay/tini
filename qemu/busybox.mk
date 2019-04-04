@@ -82,4 +82,4 @@ busybox_menuconfig:
 busybox_%:
 	$(MAKE) -C busybox $*
 
-# ex: filetype=makefile
+# ex: filetype=make

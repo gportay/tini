@@ -107,4 +107,4 @@ linux_clean:
 clean: linux_clean
 	rm -f custom*.p[bpg]m $(S)/drivers/video/logo/logo_custom_*.*
 
-# ex: filetype=makefile
+# ex: filetype=make
