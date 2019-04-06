@@ -26,6 +26,10 @@ all:
 .PHONY: download
 download:
 
+.PHONY: check
+check:
+	shellcheck --exclude=SC2039 *.tini
+
 include runqemu.mk
 
 all: kernel initramfs.cpio
