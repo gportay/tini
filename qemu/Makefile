@@ -1,5 +1,6 @@
 #
-#  Copyright (C) 2017-2018 Savoir-Faire Linux Inc.
+#  Copyright (C)      2019 Gaël PORTAY
+#                2017-2018 Savoir-Faire Linux Inc.
 #
 #  Authors:
 #      Gaël PORTAY <gael.portay@savoirfairelinux.com>
@@ -25,6 +26,10 @@ all:
 
 .PHONY: download
 download:
+
+.PHONY: check
+check:
+	shellcheck --exclude=SC2039 *.tini
 
 include runqemu.mk
 

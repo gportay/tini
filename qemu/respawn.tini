@@ -42,4 +42,5 @@ run_foreground() {
 	"$@"
 }
 
+# shellcheck source=service.tini
 . "${0%/*}/service"

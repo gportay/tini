@@ -56,8 +56,8 @@ qemu_%:
 .PHONY: doc
 doc: tini.1.gz
 
-.PHONY: clean
-clean:
+.PHONY: clean check
+clean check:
 	$(MAKE) -C qemu $@
 
 %.1: %.1.adoc

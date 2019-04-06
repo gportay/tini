@@ -29,6 +29,7 @@ run_start() {
 run_stop() {
 	local pid
 	pid="$(cat "$PIDFILE" 2>/dev/null || true)"
+	# shellcheck disable=SC2153
 	if [ -z "$pid" ] || \
 	   [ "$(readlink "/proc/$pid/exe")" != "$EXEC" ] && \
 	   [ "$(cat "/proc/$pid/comm" 2>/dev/null)" != "${EXEC##*/}" ]

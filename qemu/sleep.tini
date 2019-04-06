@@ -1,6 +1,6 @@
 #!/bin/sh /lib/tini/scripts/service
 #
-#  Copyright (C) 2018 Gaël PORTAY
+#  Copyright (C) 2018-2019 Gaël PORTAY
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -17,4 +17,5 @@
 #
 
 # EXEC="/bin/sleep" is automagically guessed thanks the name of the script.
+# shellcheck disable=SC2034
 ARGS="${1:-60}"
