@@ -42,7 +42,7 @@ Here is a quick example to try [tini(1)] on host using [qemu(1)]
 
 	$ make runqemu                                                                            :(
 	make -C qemu runqemu
-  (...)
+	(...)
 	qemu-system-x86_64 -kernel bzImage -initrd initramfs.cpio
 
 ## BUGS

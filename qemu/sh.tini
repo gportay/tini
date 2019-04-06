@@ -20,7 +20,7 @@
 # Try to deduce DEVNAME from the script name.
 # shellcheck disable=SC2154
 if [ -z "$DEVNAME" ] &&
-   echo "$__script" | grep -q "^/lib/tini/uevent/devname/" 
+	echo "$__script" | grep -q "^/lib/tini/uevent/devname/" 
 then
 	DEVNAME="${__script##/lib/tini/uevent/devname/}"
 	DEVNAME="${DEVNAME%/*}"
