@@ -54,4 +54,5 @@ run_foreground() {
 	rm -f "$PIDFILE"
 }
 
+# shellcheck source=service.tini
 . "${0%/*}/service"
