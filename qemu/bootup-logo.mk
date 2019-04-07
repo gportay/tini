@@ -6,6 +6,7 @@
 #
 
 S ?= linux
+O ?= $(S)
 
 .NOTPARALLEL:
 
@@ -35,6 +36,7 @@ all: $(S)/drivers/video/logo/logo_custom_mono.pbm \
 	    -e '/^#endif \/\* _LINUX_LINUX_LOGO_H \*\/$$/iextern const struct linux_logo logo_custom_clut224;' \
 	    -e '/^#endif \/\* _LINUX_LINUX_LOGO_H \*\/$$/iextern const struct linux_logo logo_custom_gray256;' \
 	    -i $(S)/include/linux/linux_logo.h
+	$(MAKE) -f $(lastword $(MAKEFILE_LIST)) bootup-logo_reconfig
 
 custom.png:
 	wget "https://avatars0.githubusercontent.com/u/4499761?s=200&v=4" -O $@
@@ -90,6 +92,13 @@ bootup-logo_clean:
 	sed -e '/^extern const struct linux_logo logo_custom_.*$$/d' \
 	    -i $(S)/include/linux/linux_logo.h
 	rm -f *.[bp]pm
+	$(MAKE) -f $(lastword $(MAKEFILE_LIST)) bootup-logo_reconfig
+
+.PHONY: bootup-logo_reconfig
+bootup-logo_reconfig:
+	if test -e $(O)/.config; then \
+		touch $(O)/.config; \
+	fi
 
 .PHONY: clean
 clean: bootup-logo_clean
