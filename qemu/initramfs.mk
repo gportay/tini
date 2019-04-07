@@ -28,7 +28,7 @@ include busybox.mk
 
 initramfs.cpio: ramfs
 
-ramfs ramfs/dev ramfs/proc ramfs/sys ramfs/etc ramfs/root ramfs/var:
+ramfs ramfs/dev ramfs/proc ramfs/sys ramfs/etc ramfs/root ramfs/var ramfs/tmp:
 	mkdir -p $@
 
 ramfs/init ramfs/linuxrc:
@@ -50,7 +50,7 @@ ramfs/etc/group: | ramfs/etc
 
 initramfs.cpio.gz:
 
-initramfs.cpio: | ramfs/proc ramfs/sys
+initramfs.cpio: | ramfs/proc ramfs/sys ramfs/tmp
 initramfs.cpio: ramfs/bin/busybox ramfs/dev/console
 
 include tini.mk
