@@ -6,11 +6,12 @@
 #
 
 run_start() {
-	local exec
+	local exec arg0
 	exec="$1"
 	shift
+	arg0="${ARG0:-$exec}"
 	start-stop-daemon --start --pidfile "$PIDFILE" --make-pidfile \
-		--background --exec "$exec" -- "$@"
+		--background --exec "$exec" --startas "$arg0" -- "$@"
 }
 
 run_stop() {
