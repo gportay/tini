@@ -29,7 +29,7 @@ download:
 
 .PHONY: check
 check:
-	shellcheck --exclude=SC2039 *.tini
+	shellcheck --exclude=SC2039 *.sh *.tini *.rcS
 
 include runqemu.mk
 
