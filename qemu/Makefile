@@ -24,4 +24,4 @@ include runqemu.mk
 
 all: kernel initramfs.cpio
 
-# ex: filetype=makefile
+# ex: filetype=make
