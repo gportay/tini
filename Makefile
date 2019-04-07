@@ -31,6 +31,10 @@ nographic: override export QEMUFLAGS+=-nographic -serial mon:stdio
 nographic:
 	$(MAKE) -C qemu runqemu
 
+.PHONY: vga-ask
+vga-ask: override export CMDLINE=vga=ask
+vga-ask: runqemu
+
 .PHONY: bootup-logo
 bootup-logo: S=$(CURDIR)/qemu/linux
 bootup-logo: 
