@@ -6,7 +6,7 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 #
 
-PATH=/usr/bin:/usr/sbin:/bin:sbin
+PATH=/usr/bin:/usr/sbin:/bin:/sbin
 export PATH
 
 raise rcS start
