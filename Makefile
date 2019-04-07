@@ -35,7 +35,6 @@ nographic:
 bootup-logo: S=$(CURDIR)/qemu/linux
 bootup-logo: 
 	$(MAKE) -C qemu -f $@.mk
-	echo export CMDLINE += vt.color=0xf0 >>custom.mk
 
 .PHONY: menuconfig
 menuconfig: qemu_linux_menuconfig
