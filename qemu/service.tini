@@ -65,7 +65,6 @@ then
 	}
 fi
 
-# shellcheck disable=SC2120
 stop() {
 	if ! [ -e "$PIDFILE" ]
 	then
@@ -180,8 +179,7 @@ start)
 	;;
 stop)
 	echo -n "stopping $DESCRIPTION: " >&2
-	# shellcheck disable=SC2119
-	if stop
+	if stop "$@"
 	then
 		echo "done" >&2
 	else
