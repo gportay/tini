@@ -14,7 +14,7 @@ all: $(S)/drivers/video/logo/logo_custom_mono.pbm \
      $(S)/drivers/video/logo/logo_custom_vga16.ppm \
      $(S)/drivers/video/logo/logo_custom_clut224.ppm \
      $(S)/drivers/video/logo/logo_custom_gray256.pgm \
-     linux_clean
+     bootup-logo_clean
 	sed -e '/obj-$$(CONFIG_LOGO)/aobj-$$(CONFIG_LOGO_CUSTOM_MONO)\t\t+= logo_custom_mono.o' \
 	    -e '/obj-$$(CONFIG_LOGO)/aobj-$$(CONFIG_LOGO_CUSTOM_VGA16)\t\t+= logo_custom_vga16.o' \
 	    -e '/obj-$$(CONFIG_LOGO)/aobj-$$(CONFIG_LOGO_CUSTOM_CLUT224)\t+= logo_custom_clut224.o' \
@@ -79,8 +79,8 @@ $(S)/drivers/video/logo/logo_%_gray256.pgm: %_gray256.pgm
 %.pgm: %.ppm
 	ppmtopgm $< >$@
 
-.PHONY: linux_clean
-linux_clean:
+.PHONY: bootup-logo_clean
+bootup-logo_clean:
 	sed -e '/^obj-\$$(CONFIG_LOGO_CUSTOM_.*)/d' \
 	    -i $(S)/drivers/video/logo/Makefile
 	sed -e '/config LOGO_CUSTOM_.*/,/^$$/d' \
@@ -91,7 +91,7 @@ linux_clean:
 	    -i $(S)/include/linux/linux_logo.h
 
 .PHONY: clean
-clean: linux_clean
+clean: bootup-logo_clean
 	rm -f custom*.p[bpg]m $(S)/drivers/video/logo/logo_custom_*.*
 
 # ex: filetype=make
