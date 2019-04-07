@@ -36,10 +36,10 @@ all: $(S)/drivers/video/logo/logo_custom_mono.pbm \
 	    -e '/^#endif \/\* _LINUX_LINUX_LOGO_H \*\/$$/iextern const struct linux_logo logo_custom_gray256;' \
 	    -i $(S)/include/linux/linux_logo.h
 
-custom_200x200.jpg:
-	wget "https://avatars3.githubusercontent.com/u/2735545?s=200&v=4" -O $@
+custom.png:
+	wget "https://avatars0.githubusercontent.com/u/4499761?s=200&v=4" -O $@
 
-custom.ppm: custom_200x200.jpg
+custom.ppm: custom.png
 	convert -resize 80x80 $< $@
 
 $(S)/drivers/video/logo/logo_%_mono.pbm: %_mono.pbm
