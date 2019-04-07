@@ -89,6 +89,7 @@ bootup-logo_clean:
 	    -i $(S)/drivers/video/logo/logo.c
 	sed -e '/^extern const struct linux_logo logo_custom_.*$$/d' \
 	    -i $(S)/include/linux/linux_logo.h
+	rm -f *.[bp]pm
 
 .PHONY: clean
 clean: bootup-logo_clean
