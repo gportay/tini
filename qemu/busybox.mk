@@ -54,9 +54,9 @@ busybox_download:
 busybox_source:
 	git clone --single-branch git://git.busybox.net/busybox.git busybox
 
-.SILENT: ramfs/bin/busybox
-ramfs/bin/busybox: busybox/busybox
-	$(MAKE) -C busybox install CONFIG_STATIC=y CONFIG_PREFIX=$(CURDIR)/ramfs/
+.SILENT: rootfs/bin/busybox
+rootfs/bin/busybox: busybox/busybox
+	$(MAKE) -C busybox install CONFIG_STATIC=y CONFIG_PREFIX=$(CURDIR)/rootfs/
 
 .PHONY: busybox_clean
 busybox_clean:

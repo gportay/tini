@@ -16,12 +16,12 @@ mrproper: initramfs_mrproper
 
 include cukinia.mk
 
-initramfs.cpio: ramfs/etc/cukinia/cukinia.conf ramfs/usr/bin/cukinia
+initramfs.cpio: rootfs/etc/cukinia/cukinia.conf rootfs/usr/bin/cukinia
 
-ramfs/etc/cukinia/cukinia.conf: cukinia.conf
+rootfs/etc/cukinia/cukinia.conf: cukinia.conf
 	install -D -m 644 $< $@
 
-ramfs/usr/bin/cukinia: cukinia/cukinia
+rootfs/usr/bin/cukinia: cukinia/cukinia
 	install -D -m 755 $< $@
 
 # ex: filetype=make
