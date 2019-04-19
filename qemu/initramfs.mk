@@ -26,41 +26,41 @@ mrproper: initramfs_mrproper
 
 include busybox.mk
 
-initramfs.cpio: ramfs
+initramfs.cpio: rootfs 
 
-ramfs ramfs/dev ramfs/proc ramfs/sys ramfs/etc ramfs/root ramfs/var ramfs/tmp:
+rootfs rootfs/dev rootfs/proc rootfs/sys rootfs/etc rootfs/root rootfs/var rootfs/tmp:
 	mkdir -p $@
 
-ramfs/init ramfs/linuxrc:
+rootfs/init rootfs/linuxrc:
 	ln -sf /bin/sh $@
 
-ramfs/dev/initrd: | ramfs/dev
-	fakeroot -i ramfs.env -s ramfs.env -- mknod -m 400 $@ b 1 250
+rootfs/dev/initrd: | rootfs/dev
+	fakeroot -i rootfs.env -s rootfs.env -- mknod -m 400 $@ b 1 250
 
-ramfs/dev/console: | ramfs/dev
-	fakeroot -i ramfs.env -s ramfs.env -- mknod -m 622 $@ c 5 1
+rootfs/dev/console: | rootfs/dev
+	fakeroot -i rootfs.env -s rootfs.env -- mknod -m 622 $@ c 5 1
 
-ramfs/etc/passwd: | ramfs/etc
+rootfs/etc/passwd: | rootfs/etc
 	echo "root::0:0:root:/root:/bin/sh" >$@
 	echo "tini::1000:1000:tini user:/home/tini:/bin/sh" >>$@
 
-ramfs/etc/group: | ramfs/etc
+rootfs/etc/group: | rootfs/etc
 	echo "root:x:0:root" >$@
 	echo "tini:x:1000:tini" >>$@
 
 initramfs.cpio.gz:
 
-initramfs.cpio: | ramfs/proc ramfs/sys ramfs/tmp
-initramfs.cpio: ramfs/bin/busybox ramfs/dev/console
+initramfs.cpio: | rootfs/proc rootfs/sys rootfs/tmp
+initramfs.cpio: rootfs/bin/busybox rootfs/dev/console
 
 include tini.mk
 include tests.mk
 
-initramfs.cpio: ramfs/etc/passwd ramfs/etc/group | ramfs/root
+initramfs.cpio: rootfs/etc/passwd rootfs/etc/group | rootfs/root
 
 %.cpio:
 	cd $< && find . | \
-	fakeroot -i $(CURDIR)/ramfs.env -s $(CURDIR)/ramfs.env -- \
+	fakeroot -i $(CURDIR)/rootfs.env -s $(CURDIR)/rootfs.env -- \
 	cpio -H newc -o -R root:root >$(CURDIR)/$@
 
 %.gz: %
@@ -68,7 +68,7 @@ initramfs.cpio: ramfs/etc/passwd ramfs/etc/group | ramfs/root
 
 .PHONY: initramfs_clean
 initramfs_clean:
-	rm -Rf ramfs/ ramfs.env
+	rm -Rf rootfs/ rootfs.env
 	rm -f initramfs.cpio
 
 .PHONY: initramfs_mrproper
