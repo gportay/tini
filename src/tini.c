@@ -10,7 +10,7 @@
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #else
-const char VERSION[] = __DATE__ " " __TIME__;
+static const char VERSION[] = __DATE__ " " __TIME__;
 #endif /* HAVE_CONFIG_H */
 
 #include <unistd.h>
