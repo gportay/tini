@@ -38,7 +38,7 @@ static int DEBUG = 0;
 #define verbose(fmt, ...) if (VERBOSE) fprintf(stderr, fmt, ##__VA_ARGS__)
 #define debug(fmt, ...) if (DEBUG) fprintf(stderr, fmt, ##__VA_ARGS__)
 
-static char *rcS[] = { "/lib/tini/scripts/rcS", "start", NULL };
+static char * const rcS[] = { "/lib/tini/scripts/rcS", "start", NULL };
 
 #define __strncmp(s1, s2) strncmp(s1, s2, sizeof(s2) - 1)
 #define __close(fd) do { \
