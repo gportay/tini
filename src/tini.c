@@ -349,7 +349,7 @@ static int respawn(const char *path, char * const argv[], struct proc *proc)
 		__close(fd[1]);
 		exit(EXIT_FAILURE);
 	} else if (pid) {
-		s = write(fd[1], &pid, pid);
+		s = write(fd[1], &pid, sizeof(pid));
 		if (s == -1)
 			perror("write");
 
