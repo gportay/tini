@@ -1390,6 +1390,7 @@ static int main_tini(int argc, char * const argv[])
 	/* Re-execute itself */
 	if (sig == SIGUSR1) {
 		execv(argv[0], argv);
+		perror("execv");
 		_exit(127);
 	}
 
