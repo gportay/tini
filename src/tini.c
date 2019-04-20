@@ -27,7 +27,6 @@ const char VERSION[] = __DATE__ " " __TIME__;
 #include <fcntl.h>
 #include <limits.h>
 #include <dirent.h>
-#include <assert.h>
 
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -575,7 +574,6 @@ static int netlink_open(struct sockaddr_nl *addr, int signal)
 {
 	int fd;
 
-	assert(addr);
 	memset(addr, 0, sizeof(*addr));
 	addr->nl_family = AF_NETLINK;
 	addr->nl_pid = getpid();
