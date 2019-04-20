@@ -29,7 +29,6 @@ static const char VERSION[] = __DATE__ " " __TIME__;
 #include <dirent.h>
 
 #include <sys/socket.h>
-#include <arpa/inet.h>
 #include <asm/types.h>
 #include <linux/netlink.h>
 
