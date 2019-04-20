@@ -1202,7 +1202,7 @@ static int main_status(int argc, char * const argv[])
 		return dir_parse("/run/tini", pidfile_status_by_pid, &pid) == 0 ? EXIT_FAILURE : EXIT_SUCCESS;
 
 	/* Shift arguments to remove first argument (path), and append a NULL
-	   pointer (execv) */
+	 * pointer (execv) */
 	for (i = 0; i < (argc - 1); i++)
 		arg[i] = arg[i+1];
 	arg[i] = NULL;
