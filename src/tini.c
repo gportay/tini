@@ -1148,44 +1148,9 @@ static int main_respawn(int argc, char * const argv[])
 	return EXIT_SUCCESS;
 }
 
-static int main_assassinate(int argc, char * const argv[])
-{
-	char **arg = (char **)argv;
-	const char *arg0, *path;
-	char execline[BUFSIZ];
-	pid_t pid = -1;
-	int i, ret;
-
-	if (argc == 1)
-		pid = readpid(STDIN_FILENO);
-	else if (argc == 2)
-		pid = strtopid(argv[1]);
-
-	if (pid != -1) {
-		ret = dir_parse("/run/tini", pidfile_assassinate_by_pid, &pid);
-		return ret == 0 ? EXIT_FAILURE : EXIT_SUCCESS;
-	}
-
-	/* Shift arguments to remove first argument (path), and append a NULL
-	 * pointer (execv) */
-	for (i = 0; i < (argc - 1); i++)
-		arg[i] = arg[i+1];
-	arg[i] = NULL;
-
-	path = argv[0];
-	/* The first argument, by convention, should point to the filename
-	 * associated with the file being executed. */
-	arg0 = getenv("ARGV0");
-	if (arg0)
-		*arg = (char *)arg0;
-
-	strargv(execline, sizeof(execline), path, arg);
-
-	ret = dir_parse("/run/tini", pidfile_assassinate, execline);
-	return ret == 0 ? EXIT_FAILURE : EXIT_SUCCESS;
-}
-
-static int main_status(int argc, char * const argv[])
+static int main_dir_parse(int argc, char * const argv[],
+			  directory_cb_t *callback,
+			  directory_cb_t *callback_by_pid)
 {
 	char **arg = (char **)argv;
 	const char *arg0, *path;
@@ -1199,7 +1164,7 @@ static int main_status(int argc, char * const argv[])
 		pid = strtopid(argv[1]);
 
 	if (pid != -1)
-		return dir_parse("/run/tini", pidfile_status_by_pid, &pid) == 0 ? EXIT_FAILURE : EXIT_SUCCESS;
+		return dir_parse("/run/tini", callback_by_pid, &pid);
 
 	/* Shift arguments to remove first argument (path), and append a NULL
 	 * pointer (execv) */
@@ -1216,7 +1181,19 @@ static int main_status(int argc, char * const argv[])
 
 	strargv(execline, sizeof(execline), path, arg);
 
-	return dir_parse("/run/tini", pidfile_status, execline) == 0 ? EXIT_FAILURE : EXIT_SUCCESS;
+	return dir_parse("/run/tini", callback, execline);
+}
+
+static int main_assassinate(int argc, char * const argv[])
+{
+	return main_dir_parse(argc, argv, pidfile_assassinate,
+			      pidfile_assassinate_by_pid);
+}
+
+static int main_status(int argc, char * const argv[])
+{
+	return main_dir_parse(argc, argv, pidfile_status,
+			      pidfile_status_by_pid);
 }
 
 static int main_zombize(int argc, char * const argv[])
