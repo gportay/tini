@@ -472,26 +472,6 @@ int parse_arguments(struct options_t *opts, int argc, char * const argv[])
 	return optind;
 }
 
-int uevent_spawn(const char *path, struct dirent *entry, void *data)
-{
-	const char *devname = (const char *)data;
-	char buf[PATH_MAX];
-	int status;
-
-	snprintf(buf, sizeof(buf), "DEVNAME=%s %s/%s %s", devname, path,
-		 entry->d_name, "start");
-	status = system(buf);
-	if (WIFEXITED(status)) {
-		status = WEXITSTATUS(status);
-		verbose("%s/%s: %i\n", path, entry->d_name, status);
-	} else if (WIFSIGNALED(status)) {
-		fprintf(stderr, "%s/%s: %s\n", path, entry->d_name,
-			strsignal(WTERMSIG(status)));
-	}
-
-	return 0;
-}
-
 int uevent_event(char *action, char *devpath, void *data)
 {
 	(void)action;
