@@ -109,30 +109,31 @@ static inline pid_t readpid(int fd)
 }
 
 static char *CFS = " \t\n"; /* Command-line Field Separator */
-char *strargv(char *buf, size_t bufsize, const char *path, char * const argv[]);
-char **strtonargv(char *dest[], char *src, int *n);
+static char *strargv(char *buf, size_t bufsize, const char *path,
+		     char * const argv[]);
+static char **strtonargv(char *dest[], char *src, int *n);
 
 #ifndef UEVENT_BUFFER_SIZE
 #define UEVENT_BUFFER_SIZE 2048
 #endif
 
 static int nl_fd;
-int netlink_open(struct sockaddr_nl *addr, int signal);
-ssize_t netlink_recv(int fd, struct sockaddr_nl *addr);
-int netlink_close(int fd);
+static int netlink_open(struct sockaddr_nl *addr, int signal);
+static ssize_t netlink_recv(int fd, struct sockaddr_nl *addr);
+static int netlink_close(int fd);
 
 typedef int uevent_event_cb_t(char *, char *, void *);
 typedef int uevent_variable_cb_t(char *, char *, void *);
-int uevent_parse_line(char *line,
-		      uevent_event_cb_t *evt_cb,
-		      uevent_variable_cb_t *var_cb,
-		      void *data);
+static int uevent_parse_line(char *line,
+			     uevent_event_cb_t *evt_cb,
+			     uevent_variable_cb_t *var_cb,
+			     void *data);
 
 typedef int variable_cb_t(char *, char *, void *);
-int variable_parse_line(char *line, variable_cb_t *callback, void *data);
+static int variable_parse_line(char *line, variable_cb_t *callback, void *data);
 
 typedef int directory_cb_t(const char *, struct dirent *, void *);
-int dir_parse(const char *path, directory_cb_t *callback, void *data);
+static int dir_parse(const char *path, directory_cb_t *callback, void *data);
 
 struct proc {
 	char exec[PATH_MAX];
@@ -147,9 +148,9 @@ struct proc {
 	gid_t gid;
 };
 
-int spawn(const char *path, char * const argv[], char * const envp[],
+static int spawn(const char *path, char * const argv[], char * const envp[],
 	  const char *devname);
-int respawn(const char *path, char * const argv[], struct proc *proc);
+static int respawn(const char *path, char * const argv[], struct proc *proc);
 
 struct options_t {
 	int argc;
@@ -166,7 +167,7 @@ static inline const char *applet(const char *arg0)
 	return s+1;
 }
 
-void usage(FILE * f, char * const arg0)
+static void usage(FILE * f, char * const arg0)
 {
 	const char *name = applet(arg0);
 	fprintf(f, "Usage: %s [OPTIONS]\n"
@@ -181,7 +182,7 @@ void usage(FILE * f, char * const arg0)
 		   "", name, name, name);
 }
 
-int zombize(const char *path, char * const argv[], const char *devname)
+static int zombize(const char *path, char * const argv[], const char *devname)
 {
 	pid_t pid = fork();
 	if (pid == -1) {
@@ -224,8 +225,8 @@ int zombize(const char *path, char * const argv[], const char *devname)
 	_exit(127);
 }
 
-int spawn(const char *path, char * const argv[], char * const envp[],
-	  const char *devname)
+static int spawn(const char *path, char * const argv[], char * const envp[],
+		 const char *devname)
 {
 	pid_t pid = fork();
 	if (pid == -1) {
@@ -290,7 +291,7 @@ int spawn(const char *path, char * const argv[], char * const envp[],
 	_exit(127);
 }
 
-int respawn(const char *path, char * const argv[], struct proc *proc)
+static int respawn(const char *path, char * const argv[], struct proc *proc)
 {
 	char pidfile[PATH_MAX];
 	pid_t pid;
@@ -420,7 +421,8 @@ int respawn(const char *path, char * const argv[], struct proc *proc)
 	_exit(127);
 }
 
-int parse_arguments(struct options_t *opts, int argc, char * const argv[])
+static int parse_arguments(struct options_t *opts, int argc,
+			   char * const argv[])
 {
 	static const struct option long_options[] = {
 		{ "re-exec", no_argument,       NULL, 1   },
@@ -472,7 +474,7 @@ int parse_arguments(struct options_t *opts, int argc, char * const argv[])
 	return optind;
 }
 
-int uevent_event(char *action, char *devpath, void *data)
+static int uevent_event(char *action, char *devpath, void *data)
 {
 	(void)action;
 	(void)devpath;
@@ -481,7 +483,7 @@ int uevent_event(char *action, char *devpath, void *data)
 	return 0;
 }
 
-int uevent_variable(char *variable, char *value, void *data)
+static int uevent_variable(char *variable, char *value, void *data)
 {
 	char **env = (char **)data;
 	(void)value;
@@ -490,10 +492,10 @@ int uevent_variable(char *variable, char *value, void *data)
 	return 0;
 }
 
-int uevent_parse_line(char *line,
-		      uevent_event_cb_t *evt_cb,
-		      uevent_variable_cb_t *var_cb,
-		      void *data)
+static int uevent_parse_line(char *line,
+			     uevent_event_cb_t *evt_cb,
+			     uevent_variable_cb_t *var_cb,
+			     void *data)
 {
 	char *at, *equal;
 	int ret = 0;
@@ -540,7 +542,7 @@ int uevent_parse_line(char *line,
 	return 1;
 }
 
-int setup_signal(int fd, int signal)
+static int setup_signal(int fd, int signal)
 {
 	int flags;
 
@@ -569,7 +571,7 @@ int setup_signal(int fd, int signal)
 	return 0;
 }
 
-int netlink_open(struct sockaddr_nl *addr, int signal)
+static int netlink_open(struct sockaddr_nl *addr, int signal)
 {
 	int fd;
 
@@ -603,7 +605,7 @@ error:
 	return -1;
 }
 
-int netlink_close(int fd)
+static int netlink_close(int fd)
 {
 	int ret;
 
@@ -615,7 +617,7 @@ int netlink_close(int fd)
 	return ret;
 }
 
-ssize_t netlink_recv(int fd, struct sockaddr_nl *addr)
+static ssize_t netlink_recv(int fd, struct sockaddr_nl *addr)
 {
 	char buf[UEVENT_BUFFER_SIZE];
 	struct iovec iov = {
@@ -698,7 +700,7 @@ ssize_t netlink_recv(int fd, struct sockaddr_nl *addr)
 	return len;
 }
 
-int variable_parse_line(char *line, variable_cb_t *callback, void *data)
+static int variable_parse_line(char *line, variable_cb_t *callback, void *data)
 {
 	char *equal;
 
@@ -726,7 +728,7 @@ int variable_parse_line(char *line, variable_cb_t *callback, void *data)
 	return 1;
 }
 
-ssize_t variable_read(int fd, variable_cb_t cb, void *data)
+static ssize_t variable_read(int fd, variable_cb_t cb, void *data)
 {
 	char buf[BUFSIZ];
 	ssize_t len = 0;
@@ -762,7 +764,7 @@ ssize_t variable_read(int fd, variable_cb_t cb, void *data)
 	return len;
 }
 
-int pidfile_info(char *variable, char *value, void *data)
+static int pidfile_info(char *variable, char *value, void *data)
 {
 	struct proc *proc = (struct proc *)data;
 
@@ -786,7 +788,8 @@ int pidfile_info(char *variable, char *value, void *data)
 	return 0;
 }
 
-int pidfile_parse(const char *pidfile, variable_cb_t *callback, void *data)
+static int pidfile_parse(const char *pidfile, variable_cb_t *callback,
+			 void *data)
 {
 	struct stat statbuf;
 	int fd, ret;
@@ -814,7 +817,7 @@ int pidfile_parse(const char *pidfile, variable_cb_t *callback, void *data)
 	return ret;
 }
 
-int pid_respawn(pid_t pid, int status)
+static int pid_respawn(pid_t pid, int status)
 {
 	struct proc proc;
 	char pidfile[PATH_MAX];
@@ -860,7 +863,8 @@ int pid_respawn(pid_t pid, int status)
 	return ret;
 }
 
-char *strargv(char *buf, size_t bufsize, const char *path, char * const argv[])
+static char *strargv(char *buf, size_t bufsize, const char *path,
+		     char * const argv[])
 {
 	char * const *arg = argv;
 	ssize_t size = 0;
@@ -872,7 +876,7 @@ char *strargv(char *buf, size_t bufsize, const char *path, char * const argv[])
 	return buf;
 }
 
-char **strtonargv(char *dest[], char *src, int *n)
+static char **strtonargv(char *dest[], char *src, int *n)
 {
 	char **arg = dest;
 	char *str = src;
@@ -915,38 +919,39 @@ char **strtonargv(char *dest[], char *src, int *n)
 	return dest;
 }
 
-int pidfile_assassinate(const char *path, struct dirent *entry, void *data)
-{
-	struct proc proc;
-	char pidfile[BUFSIZ];
-
-	snprintf(pidfile, sizeof(pidfile), "%s/%s", path, entry->d_name);
-
-	memset(&proc, 0, sizeof(proc));
-	proc.oldstatus = -1;
-	proc.pid = -1;
-	proc.oldpid = -1;
-	pidfile_parse(pidfile, pidfile_info, &proc);
-
-	if (!strcmp(proc.exec, (const char *)data)) {
-		if (unlink(pidfile) == -1)
-			perror("unlink");
-
-		if (kill(proc.pid, SIGKILL) == -1)
-			perror("kill");
-
-		verbose("pid %i assassinated\n", proc.pid);
-		return 1;
-	}
-
-	return 0;
-}
-
-int pidfile_assassinate_by_pid(const char *path, struct dirent *entry,
+static int pidfile_assassinate(const char *path, struct dirent *entry,
 			       void *data)
 {
 	struct proc proc;
 	char pidfile[BUFSIZ];
+
+	snprintf(pidfile, sizeof(pidfile), "%s/%s", path, entry->d_name);
+
+	memset(&proc, 0, sizeof(proc));
+	proc.oldstatus = -1;
+	proc.pid = -1;
+	proc.oldpid = -1;
+	pidfile_parse(pidfile, pidfile_info, &proc);
+
+	if (!strcmp(proc.exec, (const char *)data)) {
+		if (unlink(pidfile) == -1)
+			perror("unlink");
+
+		if (kill(proc.pid, SIGKILL) == -1)
+			perror("kill");
+
+		verbose("pid %i assassinated\n", proc.pid);
+		return 1;
+	}
+
+	return 0;
+}
+
+static int pidfile_assassinate_by_pid(const char *path, struct dirent *entry,
+				      void *data)
+{
+	struct proc proc;
+	char pidfile[BUFSIZ];
 	pid_t pid;
 
 	snprintf(pidfile, sizeof(pidfile), "%s/%s", path, entry->d_name);
@@ -975,7 +980,7 @@ int pidfile_assassinate_by_pid(const char *path, struct dirent *entry,
 	return 0;
 }
 
-int pidfile_status(const char *path, struct dirent *entry, void *data)
+static int pidfile_status(const char *path, struct dirent *entry, void *data)
 {
 	struct proc proc;
 	char pidfile[BUFSIZ];
@@ -996,8 +1001,8 @@ int pidfile_status(const char *path, struct dirent *entry, void *data)
 	return 0;
 }
 
-int pidfile_status_by_pid(const char *path, struct dirent *entry,
-			  void *data)
+static int pidfile_status_by_pid(const char *path, struct dirent *entry,
+				 void *data)
 {
 	struct proc proc;
 	char pidfile[BUFSIZ];
@@ -1023,7 +1028,7 @@ int pidfile_status_by_pid(const char *path, struct dirent *entry,
 	return 0;
 }
 
-int dir_parse(const char *path, directory_cb_t *callback, void *data)
+static int dir_parse(const char *path, directory_cb_t *callback, void *data)
 {
 	struct dirent **namelist;
 	int n, ret = 0;
@@ -1047,7 +1052,7 @@ int dir_parse(const char *path, directory_cb_t *callback, void *data)
 	return ret;
 }
 
-int kill_pid1(int signum)
+static int kill_pid1(int signum)
 {
 	if (kill(1, signum) == -1) {
 		perror("kill");
@@ -1057,7 +1062,7 @@ int kill_pid1(int signum)
 	return 0;
 }
 
-int main_kill(int signum)
+static int main_kill(int signum)
 {
 	if (kill_pid1(signum) == -1)
 		return EXIT_FAILURE;
@@ -1065,7 +1070,7 @@ int main_kill(int signum)
 	return EXIT_SUCCESS;
 }
 
-int main_spawn(int argc, char * const argv[])
+static int main_spawn(int argc, char * const argv[])
 {
 	const char **arg = (const char **)argv;
 	const char *path;
@@ -1092,7 +1097,7 @@ int main_spawn(int argc, char * const argv[])
 	return spawn(path, argv, environ, NULL);
 }
 
-int main_respawn(int argc, char * const argv[])
+static int main_respawn(int argc, char * const argv[])
 {
 	struct proc proc;
 	const char **arg = (const char **)argv;
@@ -1143,7 +1148,7 @@ int main_respawn(int argc, char * const argv[])
 	return EXIT_SUCCESS;
 }
 
-int main_assassinate(int argc, char * const argv[])
+static int main_assassinate(int argc, char * const argv[])
 {
 	char **arg = (char **)argv;
 	const char *arg0, *path;
@@ -1180,7 +1185,7 @@ int main_assassinate(int argc, char * const argv[])
 	return ret == 0 ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
-int main_status(int argc, char * const argv[])
+static int main_status(int argc, char * const argv[])
 {
 	char **arg = (char **)argv;
 	const char *arg0, *path;
@@ -1214,7 +1219,7 @@ int main_status(int argc, char * const argv[])
 	return dir_parse("/run/tini", pidfile_status, execline) == 0 ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
-int main_zombize(int argc, char * const argv[])
+static int main_zombize(int argc, char * const argv[])
 {
 	const char **arg = (const char **)argv;
 	const char *path;
@@ -1241,7 +1246,7 @@ int main_zombize(int argc, char * const argv[])
 	return zombize(argv[0], argv, NULL);
 }
 
-int main_applet(int argc, char * const argv[])
+static int main_applet(int argc, char * const argv[])
 {
 	const char *app = applet(argv[0]);
 
@@ -1268,7 +1273,7 @@ int main_applet(int argc, char * const argv[])
 	return EXIT_FAILURE;
 }
 
-int main_tini(int argc, char * const argv[])
+static int main_tini(int argc, char * const argv[])
 {
 	static struct options_t options;
 	struct sockaddr_nl addr;
