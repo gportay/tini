@@ -131,10 +131,10 @@ static inline pid_t readpid(int fd)
 		} else if (size == 0) {
 			break;
 		}
-		buf[size] = 0;
+		buf[size] = '\0';
 
 		if (buf[size-1] == '\n')
-			buf[size-1] = 0;
+			buf[size-1] = '\0';
 
 		return strtopid(buf);
 	}
@@ -665,7 +665,7 @@ static ssize_t netlink_recv(int fd, struct sockaddr_nl *addr)
 			break;
 		}
 
-		buf[l] = 0;
+		buf[l] = '\0';
 		s = buf;
 
 		for (;;) {
@@ -756,7 +756,7 @@ static ssize_t variable_read(int fd, variable_cb_t cb, void *data)
 		else if (l == 0)
 			break;
 
-		buf[l] = 0;
+		buf[l] = '\0';
 		s = buf;
 
 		for (;;) {
@@ -764,7 +764,7 @@ static ssize_t variable_read(int fd, variable_cb_t cb, void *data)
 			if (!n || n == s)
 				break;
 
-			*n = 0;
+			*n = '\0';
 			if (variable_parse_line(s, cb, data) != 0)
 				break;
 
