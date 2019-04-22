@@ -881,7 +881,7 @@ static char *strargv(char *buf, size_t bufsize, const char *path,
 		     char * const argv[])
 {
 	char * const *arg = argv;
-	ssize_t size = 0;
+	int size = 0;
 
 	size = snprintf(&buf[size], size - bufsize, "%s %s", path, *arg++);
 	while (*arg)
