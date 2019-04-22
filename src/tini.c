@@ -108,7 +108,7 @@ static inline pid_t strtopid(const char *nptr)
 	olderrno = errno;
 	errno = 0;
 	pid = strtol(nptr, &endptr, 0);
-	if (pid <= 0 || errno || *endptr) {
+	if (pid <= 0 || errno || *endptr == '\0') {
 		errno = EINVAL;
 		pid = -1;
 	} else {
@@ -854,7 +854,7 @@ static int pid_respawn(pid_t pid, int status)
 	/* overwrite values */
 	proc.oldstatus = status;
 	proc.oldpid = pid;
-	if (*proc.exec) {
+	if (proc.exec[0] != '\0') {
 		char exec[BUFSIZ];
 		int argc = 127;
 
@@ -902,7 +902,7 @@ static char **strtonargv(char *dest[], char *src, int *n)
 	}
 
 	for (;;) {
-		if (!*n)
+		if (*n == 0)
 			break;
 
 		s = strchr(str, CFS[0]);
@@ -919,7 +919,7 @@ static char **strtonargv(char *dest[], char *src, int *n)
 		str = s;
 	}
 
-	if (*str) {
+	if (*str != '\0') {
 		i++;
 		if (arg)
 			*arg++ = str;
