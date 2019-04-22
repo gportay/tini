@@ -1241,7 +1241,6 @@ static int main_applet(int argc, char * const argv[])
 {
 	const char *app = applet(argv[0]);
 
-	(void)argc;
 	if (strcmp(app, "reboot") == 0)
 		return main_kill(SIGINT);
 	else if (strcmp(app, "poweroff") == 0)
