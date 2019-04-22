@@ -812,9 +812,8 @@ static int pidfile_parse(const char *pidfile, variable_cb_t *callback,
 		return -1;
 	}
 
-	if (S_ISDIR(statbuf.st_mode)) {
+	if (S_ISDIR(statbuf.st_mode))
 		return -1;
-	}
 
 	fd = open(pidfile, O_RDONLY);
 	if (fd == -1) {
