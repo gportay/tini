@@ -781,21 +781,21 @@ static int pidfile_info(char *variable, char *value, void *data)
 {
 	struct proc *proc = (struct proc *)data;
 
-	if (!strcmp(variable, "EXEC"))
+	if (strcmp(variable, "EXEC") == 0)
 		strncpy(proc->exec, value, PATH_MAX);
-	else if (!strcmp(variable, "STDIN"))
+	else if (strcmp(variable, "STDIN") == 0)
 		proc->dev_stdin = value;
-	else if (!strcmp(variable, "STDOUT"))
+	else if (strcmp(variable, "STDOUT") == 0)
 		proc->dev_stdout = value;
-	else if (!strcmp(variable, "STDERR"))
+	else if (strcmp(variable, "STDERR") == 0)
 		proc->dev_stderr = value;
-	else if (!strcmp(variable, "PID"))
+	else if (strcmp(variable, "PID") == 0)
 		proc->pid = strtol(value, NULL, 0);
-	else if (!strcmp(variable, "COUNTER"))
+	else if (strcmp(variable, "COUNTER") == 0)
 		proc->counter = strtol(value, NULL, 0);
-	else if (!strcmp(variable, "OLDSTATUS"))
+	else if (strcmp(variable, "OLDSTATUS") == 0)
 		proc->oldstatus = strtol(value, NULL, 0);
-	else if (!strcmp(variable, "OLDPID"))
+	else if (strcmp(variable, "OLDPID") == 0)
 		proc->oldpid = strtol(value, NULL, 0);
 
 	return 0;
@@ -946,7 +946,7 @@ static int pidfile_assassinate(const char *path, struct dirent *entry,
 	proc.oldpid = -1;
 	pidfile_parse(pidfile, pidfile_info, &proc);
 
-	if (!strcmp(proc.exec, (const char *)data)) {
+	if (strcmp(proc.exec, (const char *)data) == 0) {
 		if (unlink(pidfile) == -1)
 			perror("unlink");
 
@@ -1006,7 +1006,7 @@ static int pidfile_status(const char *path, struct dirent *entry, void *data)
 	proc.oldpid = -1;
 	pidfile_parse(pidfile, pidfile_info, &proc);
 
-	if (!strcmp(proc.exec, (const char *)data)) {
+	if (strcmp(proc.exec, (const char *)data) == 0) {
 		printf("%i\n", proc.pid);
 		return 1;
 	}
@@ -1053,8 +1053,8 @@ static int dir_parse(const char *path, directory_cb_t *callback, void *data)
 	}
 
 	while (n--) {
-		if (strcmp(namelist[n]->d_name, ".") &&
-		    strcmp(namelist[n]->d_name, "..")) {
+		if (strcmp(namelist[n]->d_name, ".") != 0 &&
+		    strcmp(namelist[n]->d_name, "..") != 0 ) {
 			if (callback(path, namelist[n], data))
 				ret++;
 		}
@@ -1241,23 +1241,23 @@ static int main_applet(int argc, char * const argv[])
 	const char *app = applet(argv[0]);
 
 	(void)argc;
-	if (!strcmp(app, "reboot"))
+	if (strcmp(app, "reboot") == 0)
 		return main_kill(SIGINT);
-	else if (!strcmp(app, "poweroff"))
+	else if (strcmp(app, "poweroff") == 0)
 		return main_kill(SIGTERM);
-	else if (!strcmp(app, "halt"))
+	else if (strcmp(app, "halt") == 0)
 		return main_kill(SIGUSR2);
-	else if (!strcmp(app, "re-exec"))
+	else if (strcmp(app, "re-exec") == 0)
 		return main_kill(SIGUSR1);
-	else if (!strcmp(app, "spawn"))
+	else if (strcmp(app, "spawn") == 0)
 		return main_spawn(argc, &argv[0]);
-	else if (!strcmp(app, "respawn"))
+	else if (strcmp(app, "respawn") == 0)
 		return main_respawn(argc, &argv[0]);
-	else if (!strcmp(app, "assassinate"))
+	else if (strcmp(app, "assassinate") == 0)
 		return main_assassinate(argc, &argv[0]);
-	else if (!strcmp(app, "status"))
+	else if (strcmp(app, "status") == 0)
 		return main_status(argc, &argv[0]);
-	else if (!strcmp(app, "zombize"))
+	else if (strcmp(app, "zombize") == 0)
 		return main_zombize(argc, &argv[0]);
 
 	return EXIT_FAILURE;
@@ -1439,7 +1439,7 @@ int main(int argc, char * const argv[])
 {
 	const char *app = applet(argv[0]);
 
-	if (!strcmp(app, "tini"))
+	if (strcmp(app, "tini") == 0)
 		return main_tini(argc, argv);
 
 	return main_applet(argc, argv);
