@@ -423,11 +423,11 @@ static int respawn(const char *path, char * const argv[], struct proc *proc)
 
 	/* Drop privileges */
 	if (proc->gid)
-		if (setgid(proc->gid))
+		if (setgid(proc->gid) == -1)
 			perror("setgid");
 
 	if (proc->uid)
-		if (setuid(proc->uid))
+		if (setuid(proc->uid) == -1)
 			perror("setuid");
 
 	execv(path, argv);
@@ -807,7 +807,7 @@ static int pidfile_parse(const char *pidfile, variable_cb_t *callback,
 	struct stat statbuf;
 	int fd, ret;
 
-	if (stat(pidfile, &statbuf)) {
+	if (stat(pidfile, &statbuf) == -1) {
 		perror("stat");
 		return -1;
 	}
@@ -842,7 +842,7 @@ static int pid_respawn(pid_t pid, int status)
 		return 1;
 
 	snprintf(pidfile, sizeof(pidfile), "/run/tini/%i", pid);
-	if (stat(pidfile, &statbuf))
+	if (stat(pidfile, &statbuf) == -1)
 		return 1;
 
 	memset(&proc, 0, sizeof(proc));
