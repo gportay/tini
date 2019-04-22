@@ -228,17 +228,17 @@ static int zombize(const char *path, char * const argv[], const char *devname)
 	if (pid > 0)
 		return 0;
 
-	netlink_close(nl_fd);
+	(void)netlink_close(nl_fd);
 
 	/* Child */
 	if (devname) {
 		chdir_or_exit("/dev");
 
 		close_and_ignore_error(STDIN_FILENO);
-		open_or_exit(devname, O_RDONLY|O_NOCTTY);
+		(void)open_or_exit(devname, O_RDONLY|O_NOCTTY);
 
 		close_or_exit(STDOUT_FILENO);
-		open_or_exit(devname, O_WRONLY|O_NOCTTY);
+		(void)open_or_exit(devname, O_WRONLY|O_NOCTTY);
 
 		close_or_exit(STDERR_FILENO);
 		dup2_or_exit(STDOUT_FILENO, STDERR_FILENO);
@@ -246,7 +246,7 @@ static int zombize(const char *path, char * const argv[], const char *devname)
 		chdir_or_exit("/");
 	}
 
-	execv(path, argv);
+	(void)execv(path, argv);
 	perror("execv");
 	_exit(127);
 }
@@ -277,7 +277,7 @@ static int spawn(const char *path, char * const argv[], char * const envp[],
 		return status;
 	}
 
-	netlink_close(nl_fd);
+	(void)netlink_close(nl_fd);
 
 	/* Child */
 	pid = fork();
@@ -293,10 +293,10 @@ static int spawn(const char *path, char * const argv[], char * const envp[],
 		chdir_or_exit("/dev");
 
 		close_and_ignore_error(STDIN_FILENO);
-		open_or_exit(devname, O_RDONLY|O_NOCTTY);
+		(void)open_or_exit(devname, O_RDONLY|O_NOCTTY);
 
 		close_or_exit(STDOUT_FILENO);
-		open_or_exit(devname, O_WRONLY|O_NOCTTY);
+		(void)open_or_exit(devname, O_WRONLY|O_NOCTTY);
 
 		close_or_exit(STDERR_FILENO);
 		dup2_or_exit(STDOUT_FILENO, STDERR_FILENO);
@@ -304,7 +304,7 @@ static int spawn(const char *path, char * const argv[], char * const envp[],
 		chdir_or_exit("/");
 	}
 
-	execvpe(path, argv, envp);
+	(void)execvpe(path, argv, envp);
 	perror("execvpe");
 	_exit(127);
 }
@@ -358,7 +358,7 @@ static int respawn(const char *path, char * const argv[], struct proc *proc)
 	}
 
 	close_and_ignore_error(fd[0]);
-	netlink_close(nl_fd);
+	(void)netlink_close(nl_fd);
 	proc->counter++;
 
 	/* Child */
@@ -383,7 +383,7 @@ static int respawn(const char *path, char * const argv[], struct proc *proc)
 	 * TODO: check for fprintf returned values
 	 *       serialize in a dedicated function
 	 */
-	snprintf(pidfile, sizeof(pidfile), "/run/tini/%i", (int)getpid());
+	(void)snprintf(pidfile, sizeof(pidfile), "/run/tini/%i", (int)getpid());
 	f = fopen(pidfile, "w");
 	if (f) {
 		if (!strargv(proc->exec, sizeof(proc->exec), path, argv))
@@ -413,13 +413,13 @@ static int respawn(const char *path, char * const argv[], struct proc *proc)
 	chdir_or_exit("/dev");
 
 	close_and_ignore_error(STDIN_FILENO);
-	open_or_exit(proc->dev_stdin, O_RDONLY|O_NOCTTY);
+	(void)open_or_exit(proc->dev_stdin, O_RDONLY|O_NOCTTY);
 
 	close_or_exit(STDOUT_FILENO);
-	open_or_exit(proc->dev_stdout, O_WRONLY|O_NOCTTY);
+	(void)open_or_exit(proc->dev_stdout, O_WRONLY|O_NOCTTY);
 
 	close_or_exit(STDERR_FILENO);
-	open_or_exit(proc->dev_stderr, O_WRONLY|O_NOCTTY);
+	(void)open_or_exit(proc->dev_stderr, O_WRONLY|O_NOCTTY);
 
 	chdir_or_exit("/");
 
@@ -432,7 +432,7 @@ static int respawn(const char *path, char * const argv[], struct proc *proc)
 		if (setuid(proc->uid) == -1)
 			perror("setuid");
 
-	execv(path, argv);
+	(void)execv(path, argv);
 	perror("execv");
 	_exit(127);
 }
@@ -591,7 +591,7 @@ static int netlink_open(struct sockaddr_nl *addr, int signal)
 {
 	int fd;
 
-	memset(addr, 0, sizeof(*addr));
+	(void)memset(addr, 0, sizeof(*addr));
 	addr->nl_family = AF_NETLINK;
 	addr->nl_pid = getpid();
 	addr->nl_groups = NETLINK_KOBJECT_UEVENT;
@@ -842,11 +842,11 @@ static int pid_respawn(pid_t pid, int status)
 	if (status == 127)
 		return 1;
 
-	snprintf(pidfile, sizeof(pidfile), "/run/tini/%i", (int)pid);
+	(void)snprintf(pidfile, sizeof(pidfile), "/run/tini/%i", (int)pid);
 	if (stat(pidfile, &statbuf) == -1)
 		return 1;
 
-	memset(&proc, 0, sizeof(proc));
+	(void)memset(&proc, 0, sizeof(proc));
 	proc.oldstatus = -1;
 	proc.pid = -1;
 	proc.oldpid = -1;
@@ -860,7 +860,7 @@ static int pid_respawn(pid_t pid, int status)
 		int argc = 127;
 
 		strncpy(exec, proc.exec, sizeof(exec));
-		strtonargv(NULL, exec, &argc);
+		(void)strtonargv(NULL, exec, &argc);
 		if (argc > 0) {
 			char *argv[argc];
 			if (!strtonargv(argv, exec, &argc)) {
@@ -939,13 +939,13 @@ static int pidfile_assassinate(const char *path, struct dirent *entry,
 	struct proc proc;
 	char pidfile[BUFSIZ];
 
-	snprintf(pidfile, sizeof(pidfile), "%s/%s", path, entry->d_name);
+	(void)snprintf(pidfile, sizeof(pidfile), "%s/%s", path, entry->d_name);
 
-	memset(&proc, 0, sizeof(proc));
+	(void)memset(&proc, 0, sizeof(proc));
 	proc.oldstatus = -1;
 	proc.pid = -1;
 	proc.oldpid = -1;
-	pidfile_parse(pidfile, pidfile_info, &proc);
+	(void)pidfile_parse(pidfile, pidfile_info, &proc);
 
 	if (strcmp(proc.exec, (const char *)data) == 0) {
 		if (unlink(pidfile) == -1)
@@ -968,13 +968,13 @@ static int pidfile_assassinate_by_pid(const char *path, struct dirent *entry,
 	char pidfile[BUFSIZ];
 	pid_t pid;
 
-	snprintf(pidfile, sizeof(pidfile), "%s/%s", path, entry->d_name);
+	(void)snprintf(pidfile, sizeof(pidfile), "%s/%s", path, entry->d_name);
 
-	memset(&proc, 0, sizeof(proc));
+	(void)memset(&proc, 0, sizeof(proc));
 	proc.oldstatus = -1;
 	proc.pid = -1;
 	proc.oldpid = -1;
-	pidfile_parse(pidfile, pidfile_info, &proc);
+	(void)pidfile_parse(pidfile, pidfile_info, &proc);
 
 	pid = proc.oldpid;
 	if (pid == -1)
@@ -999,13 +999,13 @@ static int pidfile_status(const char *path, struct dirent *entry, void *data)
 	struct proc proc;
 	char pidfile[BUFSIZ];
 
-	snprintf(pidfile, sizeof(pidfile), "%s/%s", path, entry->d_name);
+	(void)snprintf(pidfile, sizeof(pidfile), "%s/%s", path, entry->d_name);
 
-	memset(&proc, 0, sizeof(proc));
+	(void)memset(&proc, 0, sizeof(proc));
 	proc.oldstatus = -1;
 	proc.pid = -1;
 	proc.oldpid = -1;
-	pidfile_parse(pidfile, pidfile_info, &proc);
+	(void)pidfile_parse(pidfile, pidfile_info, &proc);
 
 	if (strcmp(proc.exec, (const char *)data) == 0) {
 		printf("%i\n", (int)proc.pid);
@@ -1022,13 +1022,13 @@ static int pidfile_status_by_pid(const char *path, struct dirent *entry,
 	char pidfile[BUFSIZ];
 	pid_t pid;
 
-	snprintf(pidfile, sizeof(pidfile), "%s/%s", path, entry->d_name);
+	(void)snprintf(pidfile, sizeof(pidfile), "%s/%s", path, entry->d_name);
 
-	memset(&proc, 0, sizeof(proc));
+	(void)memset(&proc, 0, sizeof(proc));
 	proc.oldstatus = -1;
 	proc.pid = -1;
 	proc.oldpid = -1;
-	pidfile_parse(pidfile, pidfile_info, &proc);
+	(void)pidfile_parse(pidfile, pidfile_info, &proc);
 
 	pid = proc.oldpid;
 	if (pid == -1)
@@ -1130,7 +1130,7 @@ static int main_respawn(int argc, char * const argv[])
 		arg[i] = arg[i+1];
 	arg[i] = NULL;
 
-	memset(&proc, 0, sizeof(proc));
+	(void)memset(&proc, 0, sizeof(proc));
 	proc.dev_stdin = __getenv("STDIN", "null");
 	proc.dev_stdout = __getenv("STDOUT", "null");
 	proc.dev_stderr = __getenv("STDERR", "null");
@@ -1193,7 +1193,7 @@ static int main_dir_parse(int argc, char * const argv[],
 	if (arg0)
 		*arg = (char *)arg0;
 
-	strargv(execline, sizeof(execline), path, arg);
+	(void)strargv(execline, sizeof(execline), path, arg);
 
 	return dir_parse("/run/tini", callback, execline);
 }
@@ -1379,14 +1379,14 @@ static int main_tini(int argc, char * const argv[])
 			verbose("pid %i exited with status %i\n",
 				(int)siginfo.si_pid, siginfo.si_status);
 
-			pid_respawn(siginfo.si_pid, siginfo.si_status);
+			(void)pid_respawn(siginfo.si_pid, siginfo.si_status);
 			while (waitpid(-1, NULL, WNOHANG) > 0);
 			continue;
 		}
 
 		/* Netlink uevent */
 		if (sig == SIGIO) {
-			netlink_recv(fd, &addr);
+			(void)netlink_recv(fd, &addr);
 			continue;
 		}
 
@@ -1399,7 +1399,7 @@ static int main_tini(int argc, char * const argv[])
 	/* Reap zombies */
 	while (waitpid(-1, NULL, WNOHANG) > 0);
 
-	netlink_close(fd);
+	(void)netlink_close(fd);
 	fd = -1;
 
 	if (sigprocmask(SIG_UNBLOCK, &sigset, NULL) == -1)
@@ -1407,7 +1407,7 @@ static int main_tini(int argc, char * const argv[])
 
 	/* Re-execute itself */
 	if (sig == SIGUSR1) {
-		execv(argv[0], argv);
+		(void)execv(argv[0], argv);
 		perror("execv");
 		_exit(127);
 	}
