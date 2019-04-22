@@ -705,7 +705,7 @@ static ssize_t netlink_recv(int fd, struct sockaddr_nl *addr)
 			*env = NULL;
 			len += l;
 
-			if (spawn(argv[0], argv, envp, NULL) == -1)
+			if (spawn(argv[0], argv, envp, NULL) != EXIT_SUCCESS)
 				perror("spawn");
 		}
 	}
@@ -1154,7 +1154,7 @@ static int main_respawn(int argc, char * const argv[])
 	__unsetenv("OLDPID");
 	__unsetenv("UID");
 	__unsetenv("GID");
-	if (respawn(path, argv, &proc))
+	if (respawn(path, argv, &proc) != EXIT_SUCCESS)
 		return EXIT_FAILURE;
 
 	printf("%i\n", proc.pid);
