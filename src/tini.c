@@ -107,7 +107,7 @@ static inline pid_t strtopid(const char *nptr)
 
 	olderrno = errno;
 	errno = 0;
-	pid = strtol(nptr, &endptr, 0);
+	pid = (pid_t)strtol(nptr, &endptr, 0);
 	if (pid <= 0 || errno != 0 || *endptr == '\0') {
 		errno = EINVAL;
 		pid = -1;
@@ -383,7 +383,7 @@ static int respawn(const char *path, char * const argv[], struct proc *proc)
 	 * TODO: check for fprintf returned values
 	 *       serialize in a dedicated function
 	 */
-	snprintf(pidfile, sizeof(pidfile), "/run/tini/%i", getpid());
+	snprintf(pidfile, sizeof(pidfile), "/run/tini/%i", (int)getpid());
 	f = fopen(pidfile, "w");
 	if (f) {
 		strargv(proc->exec, sizeof(proc->exec), path, argv);
@@ -392,16 +392,16 @@ static int respawn(const char *path, char * const argv[], struct proc *proc)
 		fprintf(f, "STDIN=%s\n", proc->dev_stdin);
 		fprintf(f, "STDOUT=%s\n", proc->dev_stdout);
 		fprintf(f, "STDERR=%s\n", proc->dev_stderr);
-		fprintf(f, "PID=%i\n", proc->pid);
+		fprintf(f, "PID=%i\n", (int)proc->pid);
 		fprintf(f, "COUNTER=%i\n", proc->counter);
 		if (proc->oldstatus != -1)
 			fprintf(f, "OLDSTATUS=%i\n", proc->oldstatus);
 		if (proc->oldpid != -1)
-			fprintf(f, "OLDPID=%i\n", proc->oldpid);
+			fprintf(f, "OLDPID=%i\n", (int)proc->oldpid);
 		if (proc->uid != 0)
-			fprintf(f, "UID=%i\n", proc->uid);
+			fprintf(f, "UID=%i\n", (int)proc->uid);
 		if (proc->gid != 0)
-			fprintf(f, "GID=%i\n", proc->gid);
+			fprintf(f, "GID=%i\n", (int)proc->gid);
 
 		fclose(f);
 		f = NULL;
@@ -840,7 +840,7 @@ static int pid_respawn(pid_t pid, int status)
 	if (status == 127)
 		return 1;
 
-	snprintf(pidfile, sizeof(pidfile), "/run/tini/%i", pid);
+	snprintf(pidfile, sizeof(pidfile), "/run/tini/%i", (int)pid);
 	if (stat(pidfile, &statbuf) == -1)
 		return 1;
 
@@ -952,7 +952,7 @@ static int pidfile_assassinate(const char *path, struct dirent *entry,
 		if (kill(proc.pid, SIGKILL) == -1)
 			perror("kill");
 
-		verbose("pid %i assassinated\n", proc.pid);
+		verbose("pid %i assassinated\n", (int)proc.pid);
 		return 1;
 	}
 
@@ -985,7 +985,7 @@ static int pidfile_assassinate_by_pid(const char *path, struct dirent *entry,
 		if (kill(proc.pid, SIGKILL) == -1)
 			perror("kill");
 
-		verbose("pid %i assassinated\n", proc.pid);
+		verbose("pid %i assassinated\n", (int)proc.pid);
 		return 1;
 	}
 
@@ -1006,7 +1006,7 @@ static int pidfile_status(const char *path, struct dirent *entry, void *data)
 	pidfile_parse(pidfile, pidfile_info, &proc);
 
 	if (strcmp(proc.exec, (const char *)data) == 0) {
-		printf("%i\n", proc.pid);
+		printf("%i\n", (int)proc.pid);
 		return 1;
 	}
 
@@ -1033,7 +1033,7 @@ static int pidfile_status_by_pid(const char *path, struct dirent *entry,
 		pid = proc.pid;
 
 	if (pid == *(pid_t *)data) {
-		printf("%i\n", proc.pid);
+		printf("%i\n", (int)proc.pid);
 		return 1;
 	}
 
@@ -1156,7 +1156,7 @@ static int main_respawn(int argc, char * const argv[])
 	if (respawn(path, argv, &proc) != EXIT_SUCCESS)
 		return EXIT_FAILURE;
 
-	printf("%i\n", proc.pid);
+	printf("%i\n", (int)proc.pid);
 	return EXIT_SUCCESS;
 }
 
@@ -1374,7 +1374,7 @@ static int main_tini(int argc, char * const argv[])
 		/* Reap zombies */
 		if (sig == SIGCHLD) {
 			verbose("pid %i exited with status %i\n",
-				siginfo.si_pid, siginfo.si_status);
+				(int)siginfo.si_pid, siginfo.si_status);
 
 			pid_respawn(siginfo.si_pid, siginfo.si_status);
 			while (waitpid(-1, NULL, WNOHANG) > 0);
