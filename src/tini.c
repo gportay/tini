@@ -269,9 +269,9 @@ static int spawn(const char *path, char * const argv[], char * const envp[],
 			return -1;
 		}
 
-		if (WIFEXITED(status))
+		if (WIFEXITED(status) != 0)
 			status = WEXITSTATUS(status);
-		else if (WIFSIGNALED(status))
+		else if (WIFSIGNALED(status) != 0)
 			fprintf(stderr, "%s\n", strsignal(WTERMSIG(status)));
 
 		return status;
@@ -346,9 +346,9 @@ static int respawn(const char *path, char * const argv[], struct proc *proc)
 			return -1;
 		}
 
-		if (WIFEXITED(status))
+		if (WIFEXITED(status) != 0)
 			status = WEXITSTATUS(status);
-		else if (WIFSIGNALED(status))
+		else if (WIFSIGNALED(status) != 0)
 			fprintf(stderr, "%s\n", strsignal(WTERMSIG(status)));
 
 		if (status == 0)
@@ -695,7 +695,7 @@ static ssize_t netlink_recv(int fd, struct sockaddr_nl *addr)
 					break;
 
 				if (uevent_parse_line(s, uevent_event,
-						      uevent_variable, env))
+						     uevent_variable, env) != 0)
 					break;
 
 				env++;
@@ -765,7 +765,7 @@ static ssize_t variable_read(int fd, variable_cb_t cb, void *data)
 				break;
 
 			*n = 0;
-			if (variable_parse_line(s, cb, data))
+			if (variable_parse_line(s, cb, data) != 0)
 				break;
 
 			s = n + 1;
@@ -1055,7 +1055,7 @@ static int dir_parse(const char *path, directory_cb_t *callback, void *data)
 	while (n-- > 0) {
 		if (strcmp(namelist[n]->d_name, ".") != 0 &&
 		    strcmp(namelist[n]->d_name, "..") != 0 ) {
-			if (callback(path, namelist[n], data))
+			if (callback(path, namelist[n], data) != 0)
 				ret++;
 		}
 		free(namelist[n]);
