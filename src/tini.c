@@ -386,7 +386,8 @@ static int respawn(const char *path, char * const argv[], struct proc *proc)
 	snprintf(pidfile, sizeof(pidfile), "/run/tini/%i", (int)getpid());
 	f = fopen(pidfile, "w");
 	if (f) {
-		strargv(proc->exec, sizeof(proc->exec), path, argv);
+		if (!strargv(proc->exec, sizeof(proc->exec), path, argv))
+			perror("strargv");
 
 		fprintf(f, "EXEC=%s\n", proc->exec);
 		fprintf(f, "STDIN=%s\n", proc->dev_stdin);
@@ -403,7 +404,8 @@ static int respawn(const char *path, char * const argv[], struct proc *proc)
 		if (proc->gid != 0)
 			fprintf(f, "GID=%i\n", (int)proc->gid);
 
-		fclose(f);
+		if (fclose(f) == -1)
+			perror("fclose");
 		f = NULL;
 	}
 
@@ -1356,7 +1358,8 @@ static int main_tini(int argc, char * const argv[])
 
 	printf("tini started!\n");
 
-	spawn("/lib/tini/scripts/rcS", rcS, environ, NULL);
+	if (spawn("/lib/tini/scripts/rcS", rcS, environ, NULL) != EXIT_SUCCESS)
+		perror("spawn");
 
 	for (;;) {
 		siginfo_t siginfo;
