@@ -40,13 +40,6 @@ static int DEBUG = 0;
 static char * const rcS[] = { "/lib/tini/scripts/rcS", "start", NULL };
 
 #define __strncmp(s1, s2) strncmp(s1, s2, sizeof(s2) - 1)
-#define __close(fd) do { \
-	int __error = errno; \
-	if (close(fd) == -1) \
-		perror("close"); \
-	errno = __error; \
-} while(0)
-
 #define __unsetenv(name) do { \
 	int __error = errno; \
 	if (unsetenv(name) == -1) \
@@ -61,6 +54,49 @@ static inline const char *__getenv(const char *name, const char *undef)
 		env = undef;
 
 	return env;
+}
+
+static inline int open_or_exit(const char *filename, int flags)
+{
+	int fd = open(filename, flags);
+	if (fd == -1) {
+		perror("open");
+		exit(EXIT_FAILURE);
+	}
+
+	return fd;
+}
+
+static inline void close_or_exit(int fd)
+{
+	if (close(fd) == -1) {
+		perror("close");
+		exit(EXIT_FAILURE);
+	}
+}
+
+static inline void dup2_or_exit(int fd1, int fd2)
+{
+	if (dup2(fd1, fd2) == -1) {
+		perror("dup2");
+		exit(EXIT_FAILURE);
+	}
+}
+
+static inline void chdir_or_exit(const char *path)
+{
+	if (chdir(path) == -1) {
+		perror("chdir");
+		exit(EXIT_FAILURE);
+	}
+}
+
+static inline void close_and_ignore_error(int fd)
+{
+	int error = errno;
+	if (close(fd) == -1)
+		debug("%i: close: %s\n", fd, strerror(errno));
+	errno = error;
 }
 
 static inline pid_t strtopid(const char *nptr)
@@ -196,26 +232,18 @@ static int zombize(const char *path, char * const argv[], const char *devname)
 
 	/* Child */
 	if (devname) {
-		int fd;
+		chdir_or_exit("/dev");
 
-		if (chdir("/dev") == -1)
-			perror("chdir");
+		close_and_ignore_error(STDIN_FILENO);
+		open_or_exit(devname, O_RDONLY|O_NOCTTY);
 
-		close(STDIN_FILENO);
-		fd = open(devname, O_RDONLY|O_NOCTTY);
-		if (fd == -1)
-			perror("open");
+		close_or_exit(STDOUT_FILENO);
+		open_or_exit(devname, O_WRONLY|O_NOCTTY);
 
-		close(STDOUT_FILENO);
-		fd = open(devname, O_WRONLY|O_NOCTTY);
-		if (fd == -1)
-			perror("open");
+		close_or_exit(STDERR_FILENO);
+		dup2_or_exit(STDOUT_FILENO, STDERR_FILENO);
 
-		close(STDERR_FILENO);
-		dup2(STDOUT_FILENO, STDERR_FILENO);
-
-		if (chdir("/") == -1)
-			perror("chdir");
+		chdir_or_exit("/");
 	}
 
 	execv(path, argv);
@@ -262,26 +290,18 @@ static int spawn(const char *path, char * const argv[], char * const envp[],
 
 	/* Daemon */
 	if (devname) {
-		int fd;
+		chdir_or_exit("/dev");
 
-		if (chdir("/dev") == -1)
-			perror("chdir");
+		close_and_ignore_error(STDIN_FILENO);
+		open_or_exit(devname, O_RDONLY|O_NOCTTY);
 
-		close(STDIN_FILENO);
-		fd = open(devname, O_RDONLY|O_NOCTTY);
-		if (fd == -1)
-			perror("open");
+		close_or_exit(STDOUT_FILENO);
+		open_or_exit(devname, O_WRONLY|O_NOCTTY);
 
-		close(STDOUT_FILENO);
-		fd = open(devname, O_WRONLY|O_NOCTTY);
-		if (fd == -1)
-			perror("open");
+		close_or_exit(STDERR_FILENO);
+		dup2_or_exit(STDOUT_FILENO, STDERR_FILENO);
 
-		close(STDERR_FILENO);
-		dup2(STDOUT_FILENO, STDERR_FILENO);
-
-		if (chdir("/") == -1)
-			perror("chdir");
+		chdir_or_exit("/");
 	}
 
 	execvpe(path, argv, envp);
@@ -305,8 +325,8 @@ static int respawn(const char *path, char * const argv[], struct proc *proc)
 	pid = fork();
 	if (pid == -1) {
 		perror("fork");
-		__close(fd[0]);
-		__close(fd[1]);
+		close_and_ignore_error(fd[0]);
+		close_and_ignore_error(fd[1]);
 		return -1;
 	}
 
@@ -314,7 +334,7 @@ static int respawn(const char *path, char * const argv[], struct proc *proc)
 	if (pid) {
 		int status;
 
-		__close(fd[1]);
+		close_and_ignore_error(fd[1]);
 		s = read(fd[0], &proc->pid, sizeof(proc->pid));
 		if (s == -1) {
 			perror("read");
@@ -337,7 +357,7 @@ static int respawn(const char *path, char * const argv[], struct proc *proc)
 		return status;
 	}
 
-	__close(fd[0]);
+	close_and_ignore_error(fd[0]);
 	netlink_close(nl_fd);
 	proc->counter++;
 
@@ -345,18 +365,18 @@ static int respawn(const char *path, char * const argv[], struct proc *proc)
 	pid = fork();
 	if (pid == -1) {
 		perror("fork");
-		__close(fd[1]);
+		close_and_ignore_error(fd[1]);
 		exit(EXIT_FAILURE);
 	} else if (pid) {
 		s = write(fd[1], &pid, sizeof(pid));
 		if (s == -1)
 			perror("write");
 
-		__close(fd[1]);
+		close_and_ignore_error(fd[1]);
 		exit(EXIT_SUCCESS);
 	}
 
-	__close(fd[1]);
+	close_and_ignore_error(fd[1]);
 	proc->pid = getpid();
 
 	/*
@@ -388,23 +408,18 @@ static int respawn(const char *path, char * const argv[], struct proc *proc)
 	}
 
 	/* Daemon */
-	if (chdir("/dev") == -1)
-		perror("chdir");
+	chdir_or_exit("/dev");
 
-	close(STDIN_FILENO);
-	if (open(proc->dev_stdin, O_RDONLY|O_NOCTTY) == -1)
-		perror("open");
+	close_and_ignore_error(STDIN_FILENO);
+	open_or_exit(proc->dev_stdin, O_RDONLY|O_NOCTTY);
 
-	close(STDOUT_FILENO);
-	if (open(proc->dev_stdout, O_WRONLY|O_NOCTTY) == -1)
-		perror("open");
+	close_or_exit(STDOUT_FILENO);
+	open_or_exit(proc->dev_stdout, O_WRONLY|O_NOCTTY);
 
-	close(STDERR_FILENO);
-	if (open(proc->dev_stderr, O_WRONLY|O_NOCTTY) == -1)
-		perror("open");
+	close_or_exit(STDERR_FILENO);
+	open_or_exit(proc->dev_stderr, O_WRONLY|O_NOCTTY);
 
-	if (chdir("/") == -1)
-		perror("chdir");
+	chdir_or_exit("/");
 
 	/* Drop privileges */
 	if (proc->gid)
@@ -591,7 +606,7 @@ static int netlink_open(struct sockaddr_nl *addr, int signal)
 	}
 
 	if (setup_signal(fd, signal) == -1) {
-		__close(fd);
+		close_and_ignore_error(fd);
 		goto error;
 	}
 
@@ -599,7 +614,7 @@ static int netlink_open(struct sockaddr_nl *addr, int signal)
 	return fd;
 
 error:
-	__close(fd);
+	close_and_ignore_error(fd);
 	return -1;
 }
 
