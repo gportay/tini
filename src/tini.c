@@ -400,7 +400,8 @@ static int respawn(const char *path, char * const argv[], struct proc *proc)
 		perror("open");
 
 	close(STDERR_FILENO);
-	dup2(STDOUT_FILENO, STDERR_FILENO);
+	if (open(proc->dev_stderr, O_WRONLY|O_NOCTTY) == -1)
+		perror("open");
 
 	if (chdir("/") == -1)
 		perror("chdir");
