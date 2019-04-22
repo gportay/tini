@@ -34,8 +34,8 @@ static const char VERSION[] = __DATE__ " " __TIME__;
 
 static int VERBOSE = 0;
 static int DEBUG = 0;
-#define verbose(fmt, ...) if (VERBOSE) fprintf(stderr, fmt, ##__VA_ARGS__)
-#define debug(fmt, ...) if (DEBUG) fprintf(stderr, fmt, ##__VA_ARGS__)
+#define verbose(fmt, ...) if (VERBOSE > 0) fprintf(stderr, fmt, ##__VA_ARGS__)
+#define debug(fmt, ...) if (DEBUG > 0) fprintf(stderr, fmt, ##__VA_ARGS__)
 
 static char * const rcS[] = { "/lib/tini/scripts/rcS", "start", NULL };
 
@@ -108,7 +108,7 @@ static inline pid_t strtopid(const char *nptr)
 	olderrno = errno;
 	errno = 0;
 	pid = strtol(nptr, &endptr, 0);
-	if (pid <= 0 || errno || *endptr == '\0') {
+	if (pid <= 0 || errno != 0 || *endptr == '\0') {
 		errno = EINVAL;
 		pid = -1;
 	} else {
@@ -128,7 +128,7 @@ static inline pid_t readpid(int fd)
 		if (size == -1) {
 			perror("read");
 			break;
-		} else if (!size) {
+		} else if (size == 0) {
 			break;
 		}
 		buf[size] = 0;
@@ -225,7 +225,7 @@ static int zombize(const char *path, char * const argv[], const char *devname)
 	}
 
 	/* Parent */
-	if (pid)
+	if (pid > 0)
 		return 0;
 
 	netlink_close(nl_fd);
@@ -261,7 +261,7 @@ static int spawn(const char *path, char * const argv[], char * const envp[],
 	}
 
 	/* Parent */
-	if (pid) {
+	if (pid > 0) {
 		int status;
 
 		if (waitpid(pid, &status, 0) == -1) {
@@ -284,7 +284,7 @@ static int spawn(const char *path, char * const argv[], char * const envp[],
 	if (pid == -1) {
 		perror("fork");
 		exit(EXIT_FAILURE);
-	} else if (pid) {
+	} else if (pid > 0) {
 		exit(EXIT_SUCCESS);
 	}
 
@@ -331,7 +331,7 @@ static int respawn(const char *path, char * const argv[], struct proc *proc)
 	}
 
 	/* Parent */
-	if (pid) {
+	if (pid > 0) {
 		int status;
 
 		close_and_ignore_error(fd[1]);
@@ -367,7 +367,7 @@ static int respawn(const char *path, char * const argv[], struct proc *proc)
 		perror("fork");
 		close_and_ignore_error(fd[1]);
 		exit(EXIT_FAILURE);
-	} else if (pid) {
+	} else if (pid > 0) {
 		s = write(fd[1], &pid, sizeof(pid));
 		if (s == -1)
 			perror("write");
@@ -398,9 +398,9 @@ static int respawn(const char *path, char * const argv[], struct proc *proc)
 			fprintf(f, "OLDSTATUS=%i\n", proc->oldstatus);
 		if (proc->oldpid != -1)
 			fprintf(f, "OLDPID=%i\n", proc->oldpid);
-		if (proc->uid)
+		if (proc->uid != 0)
 			fprintf(f, "UID=%i\n", proc->uid);
-		if (proc->gid)
+		if (proc->gid != 0)
 			fprintf(f, "GID=%i\n", proc->gid);
 
 		fclose(f);
@@ -422,11 +422,11 @@ static int respawn(const char *path, char * const argv[], struct proc *proc)
 	chdir_or_exit("/");
 
 	/* Drop privileges */
-	if (proc->gid)
+	if (proc->gid != 0)
 		if (setgid(proc->gid) == -1)
 			perror("setgid");
 
-	if (proc->uid)
+	if (proc->uid != 0)
 		if (setuid(proc->uid) == -1)
 			perror("setuid");
 
@@ -661,7 +661,7 @@ static ssize_t netlink_recv(int fd, struct sockaddr_nl *addr)
 			}
 
 			break;
-		} else if (!l) {
+		} else if (l == 0) {
 			break;
 		}
 
@@ -680,7 +680,7 @@ static ssize_t netlink_recv(int fd, struct sockaddr_nl *addr)
 		s = buf;
 		s += strlen(s) + 1;
 
-		if (nenvp) {
+		if (nenvp > 0) {
 			char * const argv[] = {
 				"/lib/tini/uevent/script",
 				buf,
@@ -753,7 +753,7 @@ static ssize_t variable_read(int fd, variable_cb_t cb, void *data)
 		l = read(fd, buf, sizeof(buf));
 		if (l == -1)
 			perror("read");
-		else if (!l)
+		else if (l == 0)
 			break;
 
 		buf[l] = 0;
@@ -1052,7 +1052,7 @@ static int dir_parse(const char *path, directory_cb_t *callback, void *data)
 		return -1;
 	}
 
-	while (n--) {
+	while (n-- > 0) {
 		if (strcmp(namelist[n]->d_name, ".") != 0 &&
 		    strcmp(namelist[n]->d_name, "..") != 0 ) {
 			if (callback(path, namelist[n], data))
@@ -1289,7 +1289,7 @@ static int main_tini(int argc, char * const argv[])
 	}
 
 	/* Re-execute pid 1 when not pid 1 */
-	if (getpid() > 1 && options.re_exec) {
+	if (getpid() > 1 && options.re_exec == 1) {
 		if (kill_pid1(SIGUSR1) == -1)
 			exit(EXIT_FAILURE);
 
