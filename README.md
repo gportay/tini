@@ -51,7 +51,7 @@ Report bugs at *https://github.com/gportay/tini/issues*
 
 ## AUTHOR
 
-Written by Gaël PORTAY *gael.portay@savoirfairelinux.com*
+Written by Gaël PORTAY *gael.portay@gmail.com*
 
 ## COPYRIGHT
 
