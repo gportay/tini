@@ -26,5 +26,3 @@ all: runqemu
 else
 all: runuml
 endif
-
-# ex: filetype=make
