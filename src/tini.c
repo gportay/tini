@@ -1,6 +1,6 @@
 /*
- *  Copyright (C) 2018-2019 Gaël PORTAY
- *                2017-2018 Savoir-Faire Linux Inc.
+ *  Copyright (C) 2018-2019,2021 Gaël PORTAY
+ *                     2017-2018 Savoir-Faire Linux Inc.
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
@@ -883,9 +883,9 @@ static char *strargv(char *buf, size_t bufsize, const char *path,
 	char * const *arg = argv;
 	int size = 0;
 
-	size = snprintf(&buf[size], size - bufsize, "%s %s", path, *arg++);
+	size = snprintf(&buf[size], bufsize - size, "%s %s", path, *arg++);
 	while (*arg)
-		size += snprintf(&buf[size], size - bufsize, " %s", *arg++);
+		size += snprintf(&buf[size], bufsize - size, " %s", *arg++);
 
 	return buf;
 }
