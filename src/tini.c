@@ -753,10 +753,12 @@ static ssize_t variable_read(int fd, variable_cb_t cb, void *data)
 		ssize_t l;
 
 		l = read(fd, buf, sizeof(buf));
-		if (l == -1)
+		if (l == -1) {
 			perror("read");
-		else if (l == 0)
+			return -1;
+		} else if (l == 0) {
 			break;
+		}
 
 		buf[l] = '\0';
 		s = buf;
