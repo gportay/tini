@@ -11,7 +11,7 @@
 
 .PHONY: all
 all:
-	$(MAKE) -C src tini
+	$(MAKE) -C src $@
 
 .PHONY: runuml
 runuml: override export CMDLINE+=rdinit=/sbin/tini
@@ -63,6 +63,7 @@ test:
 .PHONY: clean check
 clean check:
 	$(MAKE) -C tests $@
+	$(MAKE) -C src $@
 
 %.1: %.1.adoc
 	asciidoctor -b manpage -o $@ $<
