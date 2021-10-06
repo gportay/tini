@@ -21,4 +21,10 @@ include initramfs.mk
 include runqemu.mk
 include runuml.mk
 
+ifeq ($(shell command -v vmlinux),)
+all: runqemu
+else
+all: runuml
+endif
+
 # ex: filetype=make

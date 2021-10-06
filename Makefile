@@ -55,6 +55,11 @@ tests_%:
 .PHONY: doc
 doc: tini.1.gz
 
+.PHONY: test
+test: override export CMDLINE+=rdinit=/sbin/tini
+test:
+	$(MAKE) -C tests
+
 .PHONY: clean check
 clean check:
 	$(MAKE) -C tests $@
