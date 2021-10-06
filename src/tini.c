@@ -881,11 +881,22 @@ static char *strargv(char *buf, size_t bufsize, const char *path,
 		     char * const argv[])
 {
 	char * const *arg = argv;
-	int size = 0;
+	int n, size = 0;
 
-	size = snprintf(&buf[size], bufsize - size, "%s %s", path, *arg++);
-	while (*arg)
-		size += snprintf(&buf[size], bufsize - size, " %s", *arg++);
+	n = snprintf(&buf[size], bufsize - size, "%s %s", path, *arg++);
+	if ((n < 0) || (bufsize - size + 1) < (size_t)n) {
+		errno = EIO;
+		return NULL;
+	}
+	size += n;
+	while (*arg) {
+		n = snprintf(&buf[size], bufsize - size, " %s", *arg++);
+		if ((n < 0) || (bufsize - size + 1) < (size_t)n) {
+			errno = EIO;
+			return NULL;
+		}
+		size += n;
+	}
 
 	return buf;
 }
