@@ -82,4 +82,4 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 [asciidoctor(1)]: https://asciidoctor.org/man/asciidoctor/
 [qemu(1)]: https://github.com/qemu/qemu
 [UML]: https://www.kernel.org/doc/html/latest/virt/uml/user_mode_linux_howto_v2.html
-[/lib/tini/scripts/rcS]: tests/rcS
+[/lib/tini/scripts/rcS]: tests/rcS.tini
