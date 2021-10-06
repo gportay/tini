@@ -1413,7 +1413,6 @@ static int main_tini(int argc, char * const argv[])
 	while (waitpid(-1, NULL, WNOHANG) > 0);
 
 	(void)netlink_close(fd);
-	fd = -1;
 
 	if (sigprocmask(SIG_UNBLOCK, &sigset, NULL) == -1)
 		perror("sigprocmask");
