@@ -10,7 +10,7 @@
 .NOTPARALLEL:
 
 .PHONY: all
-all: 
+all:
 	$(MAKE) -C src tini
 
 .PHONY: runuml
@@ -43,7 +43,7 @@ vga-ask: runqemu
 
 .PHONY: bootup-logo
 bootup-logo: S=$(CURDIR)/tests/linux
-bootup-logo: 
+bootup-logo:
 	$(MAKE) -C tests -f $@.mk
 
 .PHONY: menuconfig

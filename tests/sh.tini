@@ -1,7 +1,7 @@
 #!/bin/sh /lib/tini/scripts/respawn
 #
-#  Copyright (C) 2018-2019 Gaël PORTAY
-#                     2018 Savoir-Faire Linux Inc.
+#  Copyright (C) 2018-2019,2021 Gaël PORTAY
+#                          2018 Savoir-Faire Linux Inc.
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
 #
@@ -9,7 +9,7 @@
 # Try to deduce DEVNAME from the script name.
 # shellcheck disable=SC2154
 if [ -z "$DEVNAME" ] &&
-	echo "$__script" | grep -q "^/lib/tini/uevent/devname/" 
+	echo "$__script" | grep -q "^/lib/tini/uevent/devname/"
 then
 	DEVNAME="${__script##/lib/tini/uevent/devname/}"
 	DEVNAME="${DEVNAME%/*}"

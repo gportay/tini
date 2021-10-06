@@ -1,6 +1,6 @@
 #
-#  Copyright (C) 2018-2019 Gaël PORTAY
-#                2017-2018 Savoir-Faire Linux Inc.
+#  Copyright (C) 2018-2019,2021 Gaël PORTAY
+#                     2017-2018 Savoir-Faire Linux Inc.
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
 #
@@ -26,7 +26,7 @@ mrproper: initramfs_mrproper
 
 include busybox.mk
 
-initramfs.cpio: rootfs 
+initramfs.cpio: rootfs
 
 rootfs rootfs/dev rootfs/proc rootfs/sys rootfs/etc rootfs/root rootfs/var rootfs/tmp:
 	mkdir -p $@

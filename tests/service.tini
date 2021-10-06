@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-#  Copyright (C) 2018-2019 Gaël PORTAY
+#  Copyright (C) 2018-2019,2021 Gaël PORTAY
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
 #
@@ -37,7 +37,7 @@ start() {
 	fi
 
 	run_start "$@"
-	
+
 	if ! post_start
 	then
 		# TODO: Behavior is to be defined
@@ -66,7 +66,7 @@ stop() {
 		echo -n "Abort! "
 		return 1
 	fi
-	
+
 	run_stop "$@"
 
 	if ! post_stop

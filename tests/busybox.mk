@@ -15,7 +15,7 @@ all:
 download: busybox_download
 
 .PHONY: sources
-sources: busybox_source 
+sources: busybox_source
 
 .PHONY: clean
 clean: busybox_clean
