@@ -1,5 +1,5 @@
 #
-#  Copyright (C)      2019 Gaël PORTAY
+#  Copyright (C) 2019,2021 Gaël PORTAY
 #                2017-2018 Savoir-Faire Linux Inc.
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
@@ -28,7 +28,7 @@ busybox: busybox/busybox
 
 .SILENT: busybox/busybox
 busybox/busybox: busybox/.config
-	$(MAKE) -C busybox CONFIG_STATIC=y
+	$(MAKE) -C busybox CONFIG_STATIC=y CC=musl-gcc LD=musl-gcc
 
 .SILENT: busybox/.config
 busybox/.config: busybox/Makefile
@@ -56,7 +56,7 @@ busybox_source:
 
 .SILENT: rootfs/bin/busybox
 rootfs/bin/busybox: busybox/busybox
-	$(MAKE) -C busybox install CONFIG_STATIC=y CONFIG_PREFIX=$(CURDIR)/rootfs/
+	$(MAKE) -C busybox install CONFIG_STATIC=y CC=musl-gcc LD=musl-gcc CONFIG_PREFIX=$(CURDIR)/rootfs/
 
 .PHONY: busybox_clean
 busybox_clean:
