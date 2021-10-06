@@ -121,9 +121,10 @@ static inline pid_t strtopid(const char *nptr)
 static inline pid_t readpid(int fd)
 {
 	char buf[BUFSIZ];
-	ssize_t size;
 
 	for (;;) {
+		ssize_t size;
+
 		size = read(fd, buf, sizeof(buf));
 		if (size == -1) {
 			perror("read");
