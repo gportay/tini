@@ -13,6 +13,11 @@
 all: 
 	$(MAKE) -C src tini
 
+.PHONY: runuml
+runuml: override export CMDLINE+=rdinit=/sbin/tini
+runuml:
+	$(MAKE) -C tests $@
+
 .PHONY: verbose
 verbose: override export CMDLINE+=rdinit=/sbin/tini --verbose
 verbose: runqemu
@@ -24,35 +29,35 @@ debug: runqemu
 .PHONY: runqemu
 runqemu: override export CMDLINE+=rdinit=/sbin/tini vga=0x301
 runqemu:
-	$(MAKE) -C qemu $@
+	$(MAKE) -C tests $@
 
 .PHONY: nographic
 nographic: override export CMDLINE+=rdinit=/sbin/tini console=ttyS0
 nographic: override export QEMUFLAGS+=-nographic -serial mon:stdio
 nographic:
-	$(MAKE) -C qemu runqemu
+	$(MAKE) -C tests runqemu
 
 .PHONY: vga-ask
 vga-ask: override export CMDLINE=vga=ask
 vga-ask: runqemu
 
 .PHONY: bootup-logo
-bootup-logo: S=$(CURDIR)/qemu/linux
+bootup-logo: S=$(CURDIR)/tests/linux
 bootup-logo: 
-	$(MAKE) -C qemu -f $@.mk
+	$(MAKE) -C tests -f $@.mk
 
 .PHONY: menuconfig
-menuconfig: qemu_linux_menuconfig
+menuconfig: tests_linux_menuconfig
 
-qemu_%:
-	$(MAKE) -C qemu $*
+tests_%:
+	$(MAKE) -C tests $*
 
 .PHONY: doc
 doc: tini.1.gz
 
 .PHONY: clean check
 clean check:
-	$(MAKE) -C qemu $@
+	$(MAKE) -C tests $@
 
 %.1: %.1.adoc
 	asciidoctor -b manpage -o $@ $<
@@ -61,5 +66,5 @@ clean check:
 	gzip -c $^ >$@
 
 %:
-	$(MAKE) -C qemu $@
+	$(MAKE) -C tests $@
 

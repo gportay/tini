@@ -41,9 +41,16 @@ or
 Here is a quick example to try [tini(1)] on host using [qemu(1)]
 
 	$ make runqemu                                                                            :(
-	make -C qemu runqemu
+	make -C tests runqemu
 	(...)
 	qemu-system-x86_64 -kernel bzImage -initrd initramfs.cpio
+
+Or using [UML]
+
+	$ make runuml
+	make -C tests runuml
+	(...)
+	vmlinux initrd=initramfs.cpio rdinit=/sbin/tini mem=256M console=tty0 con0=fd:0,fd:1 con=none
 
 ## BUGS
 
@@ -74,4 +81,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 [tini(1)]: tini.1.adoc
 [asciidoctor(1)]: https://asciidoctor.org/man/asciidoctor/
 [qemu(1)]: https://github.com/qemu/qemu
-[/lib/tini/scripts/rcS]: qemu/rcS
+[UML]: https://www.kernel.org/doc/html/latest/virt/uml/user_mode_linux_howto_v2.html
+[/lib/tini/scripts/rcS]: tests/rcS

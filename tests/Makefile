@@ -17,8 +17,8 @@ download:
 check:
 	shellcheck --exclude=SC2039 --exclude=SC3037 --exclude=SC3043 --exclude=SC3057 *.sh *.tini *.rcS
 
+include initramfs.mk
 include runqemu.mk
-
-all: kernel initramfs.cpio
+include runuml.mk
 
 # ex: filetype=make

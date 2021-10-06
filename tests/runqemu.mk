@@ -1,5 +1,5 @@
 #
-#  Copyright (C)      2019 Gaël PORTAY
+#  Copyright (C) 2019,2021 Gaël PORTAY
 #                2017-2018 Savoir-Faire Linux Inc.
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
@@ -36,11 +36,10 @@ LINUX_CONFIGS	+= CONFIG_LOGO_CUSTOM_GRAY256=n
 .PHONY: all
 all:
 
-include initramfs.mk
 include kernel.mk
 
 .PHONY: runqemu
-runqemu:
+runqemu: kernel
 
 runqemu: KERNELFLAG=-kernel bzImage
 runqemu: bzImage
