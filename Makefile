@@ -1,5 +1,5 @@
 #
-#  Copyright (C)      2019 Gaël PORTAY
+#  Copyright (C) 2019,2021 Gaël PORTAY
 #                2017-2018 Savoir-Faire Linux Inc.
 #
 # SPDX-License-Identifier: LGPL-2.1-or-later
@@ -10,8 +10,8 @@
 .NOTPARALLEL:
 
 .PHONY: all
-all: override export CMDLINE+=rdinit=/sbin/tini vga=0x301
-all: runqemu
+all: 
+	$(MAKE) -C src tini
 
 .PHONY: verbose
 verbose: override export CMDLINE+=rdinit=/sbin/tini --verbose
@@ -22,6 +22,7 @@ debug: override export CMDLINE+=rdinit=/sbin/tini --debug
 debug: runqemu
 
 .PHONY: runqemu
+runqemu: override export CMDLINE+=rdinit=/sbin/tini vga=0x301
 runqemu:
 	$(MAKE) -C qemu $@
 
